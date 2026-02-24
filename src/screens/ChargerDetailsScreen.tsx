@@ -1,6 +1,6 @@
 // src/screens/ChargerDetailsScreen.tsx
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert, Image, Dimensions } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert, Image } from 'react-native';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../config/firebaseConfig';
 import { Colors } from '../styles/GlobalStyles';
@@ -20,7 +20,7 @@ const ChargerDetailsScreen = ({ route, navigation }: any) => {
         if (docSnap.exists()) {
           setCharger({ id: docSnap.id, ...docSnap.data() });
         } else {
-          Alert.alert("Erro", "Posto não encontrado.");
+          Alert.alert("Erro", "Este posto já não está disponível.");
           navigation.goBack();
         }
       } catch (error) {
@@ -32,14 +32,19 @@ const ChargerDetailsScreen = ({ route, navigation }: any) => {
     fetchChargerDetails();
   }, [chargerId]);
 
-  if (loading) return <View style={styles.loadingContainer}><ActivityIndicator size="large" color={Colors.primary} /></View>;
+  if (loading) return (
+    <View style={styles.loadingContainer}>
+      <ActivityIndicator size="large" color={Colors.primary} />
+    </View>
+  );
+  
   if (!charger) return null;
 
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         
-        {/* IMAGEM NO TOPO (Visual First) */}
+        {/* IMAGEM NO TOPO */}
         <View style={styles.imageContainer}>
           {charger.image_url ? (
             <Image source={{ uri: charger.image_url }} style={styles.chargerImage} />
@@ -51,7 +56,7 @@ const ChargerDetailsScreen = ({ route, navigation }: any) => {
           )}
         </View>
 
-        {/* CONTENT WRAPPER COM PADDING */}
+        {/* CONTEÚDO */}
         <View style={styles.contentWrapper}>
           <View style={styles.header}>
             <View style={styles.titleRow}>
@@ -81,30 +86,32 @@ const ChargerDetailsScreen = ({ route, navigation }: any) => {
 
           <Text style={styles.sectionTitle}>Instruções de Acesso</Text>
           <View style={styles.infoSection}>
-            <Text style={styles.infoText}>{charger.access_info || "O acesso será detalhado após a confirmação da reserva."}</Text>
+            <Text style={styles.infoText}>
+              {charger.access_info || "As instruções detalhadas serão fornecidas após a confirmação da reserva pelo anfitrião."}
+            </Text>
           </View>
         </View>
       </ScrollView>
 
       {/* FOOTER FIXO */}
       <View style={styles.footer}>
-        <View>
-          <Text style={styles.priceLabel}>Custo por kWh</Text>
+        <View style={styles.priceContainer}>
           <Text style={styles.priceValue}>{charger.preco_kwh} €</Text>
+          <Text style={styles.priceUnit}>/kWh</Text>
         </View>
+
         <TouchableOpacity 
-          style={[styles.reserveButton, { opacity: charger.is_active ? 1 : 0.5 }]}
-          disabled={!charger.is_active}
-          onPress={() => Alert.alert("Reserva", "Deseja solicitar este horário?")}
+          style={styles.reserveButton}
+          onPress={() => navigation.navigate('CreateBooking', { charger })}
         >
-          <Text style={styles.reserveButtonText}>{charger.is_active ? "Reservar" : "Indisponível"}</Text>
+          <Text style={styles.reserveButtonText}>RESERVAR AGORA</Text>
+          <Ionicons name="flash" size={18} color="white" />
         </TouchableOpacity>
       </View>
     </View>
   );
 };
 
-// Componente Auxiliar para manter o código limpo
 const SpecCard = ({ icon, label, value }: any) => (
   <View style={styles.specCard}>
     <MaterialCommunityIcons name={icon} size={28} color={Colors.primary} />

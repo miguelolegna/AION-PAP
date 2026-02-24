@@ -1,34 +1,94 @@
-// src/styles/Screens/ProfileStyles.ts
-import { StyleSheet } from 'react-native';
-import { Colors, Metrics } from '../GlobalStyles';
+import { StyleSheet, Platform } from 'react-native';
+import { Colors, Metrics, GlobalStyles } from '../GlobalStyles';
 
 export const ProfileStyles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+  container: { 
+    flex: 1, 
+    backgroundColor: Colors.background,
+    marginBottom: 100
+  },
+  // Header mais robusto e com profundidade real
   header: { 
     alignItems: 'center', 
-    paddingVertical: 30, 
+    paddingTop: 50,
+    paddingBottom: 30, 
     backgroundColor: Colors.white,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    elevation: 4,
+    borderBottomLeftRadius: 40,
+    borderBottomRightRadius: 40,
+    ...GlobalStyles.shadow,
+    elevation: 8,
   },
-  avatarContainer: { position: 'relative' },
-  avatar: { width: 100, height: 100, borderRadius: 50 },
+  avatarContainer: { 
+    position: 'relative',
+    ...GlobalStyles.shadow,
+  },
+  avatar: { 
+    width: 110, 
+    height: 110, 
+    borderRadius: 55,
+    borderWidth: 4,
+    borderColor: Colors.primaryLight,
+  },
   editAvatarButton: {
-    position: 'absolute', bottom: 0, right: 0,
-    backgroundColor: Colors.primary, padding: 8, borderRadius: 20,
-    borderWidth: 3, borderColor: Colors.white
+    position: 'absolute', 
+    bottom: 2, 
+    right: 2,
+    backgroundColor: Colors.primary, 
+    padding: 10, 
+    borderRadius: 25,
+    borderWidth: 4, 
+    borderColor: Colors.white,
   },
-  userName: { fontSize: 20, fontWeight: 'bold', color: Colors.dark, marginTop: 12 },
-  userEmail: { fontSize: 14, color: Colors.gray },
-  section: { marginTop: 25, paddingHorizontal: 20 },
-  sectionTitle: { fontSize: 12, fontWeight: '800', color: Colors.gray, textTransform: 'uppercase', marginBottom: 10, letterSpacing: 1 },
+  userName: { 
+    fontSize: 22, 
+    fontWeight: '800', 
+    color: Colors.dark, 
+    marginTop: 15 
+  },
+  userEmail: { 
+    fontSize: 14, 
+    color: Colors.gray,
+    fontWeight: '500'
+  },
+  // Secções com títulos mais elegantes
+  section: { 
+    marginTop: 30, 
+    paddingHorizontal: 20 
+  },
+  sectionTitle: { 
+    fontSize: 13, 
+    fontWeight: '900', 
+    color: Colors.gray, 
+    textTransform: 'uppercase', 
+    marginBottom: 12, 
+    letterSpacing: 1.5,
+    paddingLeft: 5,
+  },
+  // Menu Item estilo Apple/Moderno
   menuItem: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: Colors.white, padding: 15, borderRadius: 15, marginBottom: 8,
-    elevation: 1,
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'space-between',
+    backgroundColor: Colors.white, 
+    padding: 18, 
+    borderRadius: 20, 
+    marginBottom: 12,
+    ...GlobalStyles.shadow,
+    elevation: 2,
   },
-  menuItemLeft: { flexDirection: 'row', alignItems: 'center' },
-  iconContainer: { padding: 10, borderRadius: 12, marginRight: 15 },
-  menuLabel: { fontSize: 15, fontWeight: '600', color: Colors.dark },
+  menuItemLeft: { 
+    flexDirection: 'row', 
+    alignItems: 'center' 
+  },
+  iconContainer: { 
+    padding: 10, 
+    borderRadius: 14, 
+    marginRight: 16,
+    // O background color é injetado dinamicamente no componente (ex: color + '15')
+  },
+  menuLabel: { 
+    fontSize: 16, 
+    fontWeight: '700', 
+    color: Colors.dark 
+  },
 });

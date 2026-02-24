@@ -101,7 +101,7 @@ export const MapScreenStyles = StyleSheet.create({
   calloutContainer: {
     width: '100%', 
     backgroundColor: Colors.white, 
-    borderRadius: 20, 
+    borderRadius: 30, 
     overflow: 'hidden',
     ...GlobalStyles.shadow,
     elevation: 10,

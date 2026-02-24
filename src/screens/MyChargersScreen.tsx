@@ -4,8 +4,9 @@ import { View, FlatList, Text, ActivityIndicator, Alert } from 'react-native';
 import { collection, query, where, onSnapshot, doc, deleteDoc } from 'firebase/firestore';
 import { db } from '../config/firebaseConfig';
 import { useAuth } from '../context/AuthContext';
+import { Colors } from '../styles/GlobalStyles'; // ADICIONA ISTO
 import { MyChargersStyles as styles } from '../styles/Screens/MyChargersStyles';
-import ChargerListItem from '../components/ChargerListItem'; // Componente reutilizável
+import ChargerListItem from '../components/ChargerListItem';
 
 const MyChargersScreen = ({ navigation }: any) => {
   const { user } = useAuth();
@@ -15,7 +16,7 @@ const MyChargersScreen = ({ navigation }: any) => {
   useEffect(() => {
     if (!user) return;
 
-    // Filtro Lógico: Apenas postos deste utilizador
+    // Lógica Lógica: Filtra apenas postos onde o utilizador é dono
     const q = query(collection(db, "chargers"), where("owner_uid", "==", user.uid));
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -28,7 +29,7 @@ const MyChargersScreen = ({ navigation }: any) => {
   }, [user]);
 
   const handleDelete = (id: string) => {
-    Alert.alert("Confirmar", "Deseja remover este carregador permanentemente?", [
+    Alert.alert("Aviso", "Eliminar este posto permanentemente?", [
       { text: "Cancelar", style: "cancel" },
       { text: "Eliminar", style: "destructive", onPress: async () => {
           await deleteDoc(doc(db, "chargers", id));
@@ -36,12 +37,13 @@ const MyChargersScreen = ({ navigation }: any) => {
     ]);
   };
 
-  if (loading) return <ActivityIndicator style={{ flex: 1 }} color="#00BFA5" />;
+  if (loading) return <ActivityIndicator style={{ flex: 1 }} color={Colors.primary} />;
 
   return (
     <View style={styles.container}>
       <FlatList
         data={myChargers}
+        contentContainerStyle={styles.listContent}
         keyExtractor={item => item.id}
         renderItem={({ item }) => (
           <ChargerListItem 
@@ -51,7 +53,9 @@ const MyChargersScreen = ({ navigation }: any) => {
           />
         )}
         ListEmptyComponent={
-          <Text style={styles.emptyText}>Ainda não registou nenhum carregador.</Text>
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>Ainda não tens postos registados.</Text>
+          </View>
         }
       />
     </View>

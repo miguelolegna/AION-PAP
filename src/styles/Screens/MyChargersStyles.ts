@@ -1,123 +1,102 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Dimensions } from 'react-native';
 import { Colors, Metrics, GlobalStyles } from '../GlobalStyles';
 
+const { width } = Dimensions.get('window');
+
 export const MyChargersStyles = StyleSheet.create({
-  // ==========================================
-  // 1. CONTENTOR PRINCIPAL
-  // ==========================================
   container: {
     ...GlobalStyles.container,
   },
   listContent: {
     padding: Metrics.padding,
-    paddingBottom: 40,
+    paddingBottom: 60, // Espaço extra para não bater na tab bar
   },
-
-  // ==========================================
-  // 2. CARTÃO DO CARREGADOR (LIST ITEM)
-  // ==========================================
+  // Cartão com design de dashboard
   card: {
     backgroundColor: Colors.white,
-    borderRadius: Metrics.radius + 4,
-    marginBottom: Metrics.spacing * 1.5,
+    borderRadius: 24, // Bordas mais arredondadas para um look moderno
+    marginBottom: 20,
     flexDirection: 'row',
+    height: 120, // Altura fixa para consistência
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: Colors.border,
-    ...GlobalStyles.shadow, // Aplica a sombra definida no GlobalStyles
+    borderColor: 'rgba(0,0,0,0.05)',
+    ...GlobalStyles.shadow,
+    elevation: 4,
   },
   imagePreview: {
-    width: 100,
+    width: 110,
     height: '100%',
     backgroundColor: Colors.primaryLight,
   },
+  // Badge estilo "Pill"
+  statusBadge: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12,
+    zIndex: 10,
+    ...GlobalStyles.shadow,
+  },
+  statusText: {
+    fontSize: 10,
+    fontWeight: '900',
+    color: Colors.white,
+    letterSpacing: 0.5,
+  },
   infoContainer: {
     flex: 1,
-    padding: 12,
-    justifyContent: 'center',
+    padding: 15,
+    justifyContent: 'space-between',
   },
-
-  // ==========================================
-  // 3. TIPOGRAFIA DO CARTÃO
-  // ==========================================
   address: {
-    fontSize: 14,
-    fontWeight: 'bold',
+    fontSize: 16,
+    fontWeight: '800',
     color: Colors.dark,
-    marginBottom: 4,
   },
   specRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 2,
   },
   specText: {
-    fontSize: 12,
+    fontSize: 13,
     color: Colors.gray,
-    marginLeft: 6,
+    fontWeight: '600',
+    marginLeft: 8,
   },
-
-  // ==========================================
-  // 4. AÇÕES E STATUS
-  // ==========================================
+  // Coluna de ações com fundo subtil para separação
   actionsContainer: {
     flexDirection: 'column',
+    backgroundColor: '#F8F9FA',
+    width: 60,
     borderLeftWidth: 1,
     borderLeftColor: Colors.border,
-    width: 50,
   },
   actionButton: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 10,
   },
   deleteButton: {
     borderTopWidth: 1,
     borderTopColor: Colors.border,
   },
-  statusBadge: {
-    position: 'absolute',
-    top: 8,
-    left: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    zIndex: 10,
-  },
-  statusText: {
-    fontSize: 9,
-    fontWeight: '800',
-    color: Colors.white,
-    textTransform: 'uppercase',
-  },
-
-  // ==========================================
-  // 5. ESTADO VAZIO (EMPTY STATE)
-  // ==========================================
+  // Empty State visualmente apelativo
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 100,
+    marginTop: 80,
     paddingHorizontal: 40,
   },
   emptyText: {
     fontSize: 16,
     color: Colors.gray,
+    fontWeight: '600',
     textAlign: 'center',
-    marginTop: 15,
-    lineHeight: 22,
-  },
-  addFirstButton: {
     marginTop: 20,
-    paddingVertical: 12,
-    paddingHorizontal: 25,
-    backgroundColor: Colors.primaryLight,
-    borderRadius: Metrics.radius,
+    lineHeight: 24,
   },
-  addFirstText: {
-    color: Colors.primaryDark,
-    fontWeight: 'bold',
-  }
 });

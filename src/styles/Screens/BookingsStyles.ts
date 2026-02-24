@@ -1,76 +1,115 @@
 import { StyleSheet } from 'react-native';
-import { Colors, Metrics } from '../GlobalStyles';
+import { Colors, Metrics, GlobalStyles } from '../GlobalStyles';
 
 export const BookingsStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.white,
+  },
+  content: {
     padding: Metrics.padding,
   },
-  title: {
-    color: Colors.primary,
-    fontSize: 24,
+  stationCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 25,
+  },
+  iconWrapper: {
+    backgroundColor: Colors.primaryLight,
+    padding: 12,
+    borderRadius: 15,
+  },
+  stationInfo: {
+    marginLeft: 15,
+    flex: 1,
+  },
+  stationName: {
+    fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 20,
-    marginTop: 10,
+    color: Colors.dark,
   },
-  listContent: {
-    paddingBottom: 20,
+  stationSub: {
+    color: Colors.gray,
+    marginTop: 2,
   },
-  bookingCard: {
-    backgroundColor: Colors.background,
-    borderRadius: Metrics.radius,
-    padding: 15,
-    marginBottom: Metrics.spacing,
-    borderLeftWidth: 4,
+  divider: {
+    height: 1,
+    backgroundColor: '#EEE',
+    marginBottom: 25,
   },
-  activeBorder: {
-    borderLeftColor: Colors.primary,
+  sectionLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: Colors.dark,
+    marginBottom: 15,
   },
-  finishedBorder: {
-    borderLeftColor: Colors.gray,
+  pickerWrapper: {
+    backgroundColor: '#F8F9FA',
+    borderRadius: 20,
+    padding: 10,
+    marginBottom: 25,
   },
-  headerRow: {
+  durationRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 30,
   },
-  address: {
-    color: Colors.white,
-    fontSize: 16,
+  durationBtn: {
+    paddingVertical: 12,
+    borderRadius: 15,
+    width: '22%',
+    alignItems: 'center',
+  },
+  durationText: {
     fontWeight: 'bold',
-    flex: 1,
+  },
+  summaryCard: {
+    backgroundColor: Colors.dark,
+    padding: 25,
+    borderRadius: 25,
+    marginTop: 10,
+    ...GlobalStyles.shadow,
+  },
+  summaryLabel: {
+    color: '#AAA',
+    fontSize: 11,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    marginTop: 10,
+  },
+  summaryText: {
+    color: Colors.white,
+    fontSize: 14,
+    marginBottom: 2,
+  },
+  totalPrice: {
+    color: Colors.primary,
+    fontSize: 28,
+    fontWeight: 'bold',
+  },
+  moduleBadge: {
+    color: '#AAA',
+    fontSize: 10,
+  },
+  confirmBtn: {
+    backgroundColor: Colors.primary,
+    padding: 20,
+    borderRadius: 20,
+    marginTop: 40,
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    ...GlobalStyles.shadow,
+  },
+  confirmBtnText: {
+    color: Colors.white,
+    fontWeight: 'bold',
+    fontSize: 16,
     marginRight: 10,
   },
-  statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-  },
-  statusText: {
-    fontSize: 10,
-    fontWeight: 'bold',
-  },
-  detailsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 5,
-  },
-  detailsText: {
-    color: Colors.gray,
-    fontSize: 13,
-    marginLeft: 5,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 100,
-  },
-  emptyText: {
-    color: Colors.gray,
-    fontSize: 16,
-    marginTop: 10,
-  }
 });
