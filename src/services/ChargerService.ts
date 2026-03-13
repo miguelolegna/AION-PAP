@@ -2,7 +2,12 @@ import {
   addDoc, 
   collection, 
   Timestamp, 
-  serverTimestamp 
+  serverTimestamp,
+  doc,
+  updateDoc,
+  getDocs,
+  query,
+  where
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../config/firebaseConfig';
@@ -27,17 +32,20 @@ export interface ChargerFormData {
 }
 
 /**
- * Interface para o modelo de dados de reservas (C1)
+ * Interface atualizada para evitar erro ts(2353) [cite: 2025-12-09]
  */
 export interface BookingData {
-  charger_id: string;      // Referência ao carregador
-  charger_address: string; // Morada (cache para evitar fetches extras)
-  user_uid: string;        // ID do condutor (quem reserva)
-  owner_uid: string;       // ID do anfitrião (dono do posto)
-  start_time: Date;        // Timestamp de início
-  end_time: Date;          // Timestamp de fim
-  estimated_kwh: number;   // Consumo previsto
-  total_price: number;     // Custo total previsto
+  charger_id: string;      
+  charger_address: string; 
+  user_uid: string;        
+  owner_uid: string;       
+  start_time: Date;        
+  end_time: Date;          
+  estimated_kwh: number;   
+  total_price: number;     
+  status: 'pending' | 'accepted' | 'rejected' | 'cancelled' | 'completed'; // Adicionado [cite: 2025-12-09]
+  payment_status: string;  // Adicionado para o Módulo D [cite: 2025-12-09]
+  charger_is_deleted: boolean; // Adicionado para segurança [cite: 2025-12-09]
 }
 
 // ==========================================
@@ -87,13 +95,12 @@ export const getAddressFromCoords = async (latitude: number, longitude: number) 
 };
 
 // ==========================================
-// 3. MÓDULO B3: GESTÃO DE CARREGADORES
+// 3. GESTÃO DE CARREGADORES
 // ==========================================
 
 export const createCharger = async (data: ChargerFormData) => {
   try {
     let firebaseUrl = "";
-    
     if (data.imageUri) {
       firebaseUrl = await uploadChargerImage(data.imageUri, data.owner_uid);
     }
@@ -128,12 +135,9 @@ export const createCharger = async (data: ChargerFormData) => {
 };
 
 // ==========================================
-// 4. MÓDULO C1: MOTOR DE RESERVAS
+// 4. MOTOR DE RESERVAS
 // ==========================================
 
-/**
- * Cria um novo registo de reserva na coleção 'bookings'
- */
 export const createBooking = async (data: BookingData) => {
   try {
     const docRef = await addDoc(collection(db, "bookings"), {
@@ -145,13 +149,43 @@ export const createBooking = async (data: BookingData) => {
       end_time: Timestamp.fromDate(data.end_time),
       estimated_kwh: data.estimated_kwh,
       total_price: data.total_price,
-      status: 'pending', // Estado inicial para aprovação
-      created_at: serverTimestamp() // Timestamp para ordenação e auditoria
+      status: data.status, // Agora aceita o valor passado pelo componente [cite: 2025-12-09]
+      payment_status: data.payment_status,
+      charger_is_deleted: data.charger_is_deleted,
+      created_at: serverTimestamp()
     });
 
     return { success: true, id: docRef.id };
   } catch (error) {
     console.error("Erro ao processar reserva:", error);
+    return { success: false, error };
+  }
+};
+
+export const updateBookingStatus = async (bookingId: string, newStatus: string) => {
+  try {
+    const bookingRef = doc(db, "bookings", bookingId);
+    await updateDoc(bookingRef, { 
+      status: newStatus,
+      updated_at: serverTimestamp() 
+    });
+    return { success: true };
+  } catch (error) {
+    console.error("Erro ao atualizar reserva:", error);
+    return { success: false, error };
+  }
+};
+
+export const cancelBooking = async (bookingId: string) => {
+  try {
+    const bookingRef = doc(db, "bookings", bookingId);
+    await updateDoc(bookingRef, { 
+      status: 'cancelled',
+      updated_at: serverTimestamp() 
+    });
+    return { success: true };
+  } catch (error) {
+    console.error("Erro ao cancelar reserva:", error);
     return { success: false, error };
   }
 };

@@ -48,7 +48,7 @@ const AppNavigator = () => (
       <Stack.Screen 
         name="CreateBooking" 
         component={CreateBookingScreen} 
-        options={{ headerShown: true, title: 'Agendar Carregamento' }} 
+        options={{ headerShown: true, title: 'Agendar Carregamento', headerTintColor: Colors.primary }} 
       />
       <Stack.Screen 
         name="MyChargers" 

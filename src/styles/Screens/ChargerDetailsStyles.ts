@@ -1,3 +1,4 @@
+// src/styles/Screens/ChargerDetailsStyles.ts
 import { StyleSheet, Dimensions, Platform } from 'react-native';
 import { Colors, Metrics, GlobalStyles } from '../GlobalStyles';
 

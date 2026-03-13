@@ -1,12 +1,12 @@
-// src/screens/MyChargersScreen.tsx
 import React, { useState, useEffect } from 'react';
-import { View, FlatList, Text, ActivityIndicator, Alert } from 'react-native';
+import { View, FlatList, Text, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
 import { collection, query, where, onSnapshot, doc, deleteDoc } from 'firebase/firestore';
 import { db } from '../config/firebaseConfig';
 import { useAuth } from '../context/AuthContext';
-import { Colors } from '../styles/GlobalStyles'; // ADICIONA ISTO
+import { Colors } from '../styles/GlobalStyles';
 import { MyChargersStyles as styles } from '../styles/Screens/MyChargersStyles';
 import ChargerListItem from '../components/ChargerListItem';
+import { Ionicons } from '@expo/vector-icons';
 
 const MyChargersScreen = ({ navigation }: any) => {
   const { user } = useAuth();
@@ -16,12 +16,13 @@ const MyChargersScreen = ({ navigation }: any) => {
   useEffect(() => {
     if (!user) return;
 
-    // Lógica Lógica: Filtra apenas postos onde o utilizador é dono
     const q = query(collection(db, "chargers"), where("owner_uid", "==", user.uid));
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setMyChargers(data);
+      setMyChargers(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      setLoading(false);
+    }, (error) => {
+      console.error("Erro MyChargers:", error);
       setLoading(false);
     });
 
@@ -29,9 +30,9 @@ const MyChargersScreen = ({ navigation }: any) => {
   }, [user]);
 
   const handleDelete = (id: string) => {
-    Alert.alert("Aviso", "Eliminar este posto permanentemente?", [
-      { text: "Cancelar", style: "cancel" },
-      { text: "Eliminar", style: "destructive", onPress: async () => {
+    Alert.alert("ATENÇÃO", "ELIMINAR ESTE POSTO PERMANENTEMENTE?", [
+      { text: "CANCELAR", style: "cancel" },
+      { text: "ELIMINAR", style: "destructive", onPress: async () => {
           await deleteDoc(doc(db, "chargers", id));
       }}
     ]);
@@ -54,7 +55,14 @@ const MyChargersScreen = ({ navigation }: any) => {
         )}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>Ainda não tens postos registados.</Text>
+            <Ionicons name="flash-off" size={50} color={Colors.gray} />
+            <Text style={styles.emptyText}>Não tens postos registados na tua rede.</Text>
+            <TouchableOpacity 
+              onPress={() => navigation.navigate('AddCharger')}
+              style={{ marginTop: 20, backgroundColor: Colors.primary, padding: 12, borderRadius: 10 }}
+            >
+              <Text style={{ color: 'white', fontWeight: 'bold' }}>ADICIONAR PRIMEIRO POSTO</Text>
+            </TouchableOpacity>
           </View>
         }
       />

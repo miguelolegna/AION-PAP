@@ -2,8 +2,8 @@ import 'dotenv/config';
 
 export default {
   expo: {
-    name: "Aktie",
-    slug: "Aktie",
+    name: "AION",
+    slug: "AION",
     version: "1.0.0",
     // Icon principal (iOS/Expo Go)
     icon: "./assets/icon.png", 

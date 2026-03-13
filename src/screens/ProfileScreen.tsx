@@ -21,9 +21,38 @@ const ProfileScreen = ({ navigation }: any) => {
     </TouchableOpacity>
   );
 
+  // VIEW PARA UTILIZADORES NÃO AUTENTICADOS
+  if (!user) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center', padding: 20 }]}>
+        <MaterialCommunityIcons name="account-circle-outline" size={100} color={Colors.gray} />
+        <Text style={{ fontSize: 20, fontWeight: 'bold', marginTop: 20, color: Colors.dark }}>
+          Sessão não iniciada
+        </Text>
+        <Text style={{ textAlign: 'center', color: Colors.gray, marginTop: 10, marginBottom: 30 }}>
+          Inicia sessão para gerires os teus carregadores, veres o teu histórico e fazeres reservas.
+        </Text>
+        
+        <TouchableOpacity 
+          style={{ backgroundColor: Colors.primary, width: '100%', padding: 15, borderRadius: 10, alignItems: 'center' }}
+          onPress={() => navigation.navigate('Auth')}
+        >
+          <Text style={{ color: 'white', fontWeight: 'bold' }}>ENTRAR NA CONTA</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={{ marginTop: 20 }}
+          onPress={() => navigation.navigate('Auth', { screen: 'Register' })} // Ajusta se o nome for diferente
+        >
+          <Text style={{ color: Colors.primary, fontWeight: 'bold' }}>Não tens conta? Criar agora</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  // VIEW PARA UTILIZADORES LOGADOS
   return (
     <ScrollView style={styles.container}>
-      {/* HEADER: INFO DO UTILIZADOR */}
       <View style={styles.header}>
         <View style={styles.avatarContainer}>
           <Image 
@@ -38,7 +67,6 @@ const ProfileScreen = ({ navigation }: any) => {
         <Text style={styles.userEmail}>{user?.email}</Text>
       </View>
 
-      {/* SECÇÃO: GESTÃO (DONO) */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Anfitrião</Text>
         <MenuOption 
@@ -54,22 +82,12 @@ const ProfileScreen = ({ navigation }: any) => {
         />
       </View>
 
-      {/* SECÇÃO: UTILIZAÇÃO (CONDUTOR) */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Condutor</Text>
-        <MenuOption 
-          icon="history" 
-          label="Histórico de Carregamentos" 
-          onPress={() => navigation.navigate('History', { mode: 'driver' })} 
-        />
-        <MenuOption 
-          icon="credit-card-outline" 
-          label="Pagamentos e Faturação" 
-          onPress={() => {}} 
-        />
+        <MenuOption icon="history" label="Histórico de Carregamentos" onPress={() => {}} />
+        <MenuOption icon="credit-card-outline" label="Pagamentos" onPress={() => {}} />
       </View>
 
-      {/* SECÇÃO: CONFIGURAÇÕES */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Apoio</Text>
         <MenuOption icon="cog-outline" label="Configurações" onPress={() => {}} />
