@@ -1,34 +1,69 @@
-// src/styles/Screens/BookingsStyles.ts
 import { StyleSheet } from 'react-native';
-import { Colors, Metrics, GlobalStyles } from '../GlobalStyles';
+import { Colors, GlobalStyles } from '../GlobalStyles';
 
 export const BookingsStyles = StyleSheet.create({
   container: {
-    ...GlobalStyles.container,
+    flex: 1,
     backgroundColor: Colors.background,
   },
-  title: {
-    ...GlobalStyles.title,
-    paddingHorizontal: 20,
-    marginTop: 20,
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
+  header: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    marginBottom: 10,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: Colors.dark,
+  },
+  // Estilos das Tabs (Novo)
+  tabBar: {
+    flexDirection: 'row',
+    marginHorizontal: 20,
+    backgroundColor: Colors.border,
+    borderRadius: 12,
+    padding: 4,
+    marginBottom: 15,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+    borderRadius: 10,
+  },
+  activeTab: {
+    backgroundColor: Colors.white,
+    elevation: 2,
+    shadowColor: Colors.shadow,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  tabLabel: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: Colors.gray,
+  },
+  // Estilos do Cartão
   listContent: {
     paddingHorizontal: 20,
     paddingBottom: 40,
   },
   bookingCard: {
     backgroundColor: Colors.white,
-    borderRadius: 18,
-    padding: 16,
+    borderRadius: 20,
+    padding: 20,
     marginBottom: 15,
-    borderWidth: 1,
-    ...GlobalStyles.shadow,
-  },
-  activeBorder: {
-    borderColor: Colors.primary,
-  },
-  finishedBorder: {
-    borderColor: Colors.border,
+    elevation: 4,
+    shadowColor: Colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   headerRow: {
     flexDirection: 'row',
@@ -50,7 +85,7 @@ export const BookingsStyles = StyleSheet.create({
   },
   statusText: {
     fontSize: 10,
-    fontWeight: '900',
+    fontWeight: 'bold',
   },
   detailsRow: {
     flexDirection: 'row',
@@ -60,6 +95,20 @@ export const BookingsStyles = StyleSheet.create({
   detailsText: {
     fontSize: 14,
     color: Colors.gray,
+    marginLeft: 8,
+  },
+  // Botões de Ação (Novo)
+  primaryButton: {
+    marginTop: 20,
+    padding: 15,
+    borderRadius: 12,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: Colors.white,
+    fontWeight: 'bold',
     marginLeft: 8,
   },
   emptyContainer: {

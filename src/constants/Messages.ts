@@ -3,7 +3,7 @@
 export const SystemMessages = {
   auth: {
     loginSuccess: "Entraste com sucesso. Bem-vindo de volta!",
-    registerSuccess: "A tua conta Aktie foi criada. Já podes começar!",
+    registerSuccess: "A tua conta AION foi criada. Já podes começar!",
     logoutConfirm: "Tens a certeza que queres sair?",
     invalidEmail: "O email que inseriste não é válido. Verifica-o, por favor.",
     wrongPassword: "A password está incorreta. Tenta novamente.",

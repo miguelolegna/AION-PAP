@@ -1,21 +1,29 @@
+// src/screens/HomeScreen.tsx
 import React, { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator, FlatList, TouchableOpacity, Alert, ScrollView } from 'react-native';
-import { collection, onSnapshot, query, where, doc, updateDoc } from 'firebase/firestore';
+import { 
+  View, 
+  Text, 
+  ActivityIndicator, 
+  FlatList, 
+  TouchableOpacity, 
+  SafeAreaView, 
+  StatusBar 
+} from 'react-native';
+import { collection, onSnapshot, query } from 'firebase/firestore';
 import { db } from '../config/firebaseConfig';
 import { useAuth } from '../context/AuthContext';
 import { useNavigation } from '@react-navigation/native';
-import { Colors } from '../styles/GlobalStyles';
-import { HomeStyles } from '../styles/Screens/HomeStyles'; 
+import { Colors, GlobalStyles } from '../styles/GlobalStyles';
+import { HomeStyles as styles } from '../styles/Screens/HomeStyles';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 const HomeScreen: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [chargers, setChargers] = useState<any[]>([]);
-  const [pendingRequests, setPendingRequests] = useState<any[]>([]);
   
   const navigation = useNavigation<any>();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
 
-  // 1. Monitorizar todos os carregadores (Tempo Real)
   useEffect(() => {
     const q = query(collection(db, "chargers"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -25,115 +33,96 @@ const HomeScreen: React.FC = () => {
     return () => unsubscribe();
   }, []);
 
-  // 2. Monitorizar pedidos pendentes para o DONO (Tempo Real)
-  useEffect(() => {
-    if (!user) {
-      setPendingRequests([]);
-      return;
-    }
-    const q = query(
-      collection(db, "bookings"),
-      where("owner_uid", "==", user.uid),
-      where("status", "==", "pending")
+  const handleLoginPress = () => navigation.navigate('Auth');
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </View>
     );
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      setPendingRequests(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
-    });
-    return () => unsubscribe();
-  }, [user]);
-
-  const handleAction = async (id: string, status: 'accepted' | 'rejected') => {
-    try {
-      await updateDoc(doc(db, "bookings", id), { 
-        status, 
-        updated_at: new Date() 
-      });
-      Alert.alert("SISTEMA", `Reserva ${status === 'accepted' ? 'ACEITE' : 'RECUSADA'}.`);
-    } catch (e) {
-      Alert.alert("ERRO", "Falha crítica ao processar decisão.");
-    }
-  };
-
-  const handleLogout = () => {
-    Alert.alert("Sair", "Encerrar sessão?", [
-      { text: "Cancelar", style: "cancel" },
-      { text: "Sair", style: "destructive", onPress: logout }
-    ]);
-  };
-
-  if (loading) return <View style={HomeStyles.center}><ActivityIndicator size="large" color={Colors.primary} /></View>;
+  }
 
   return (
-    <View style={HomeStyles.container}>
-      {/* HEADER */}
-      <View style={HomeStyles.header}>
-        <View>
-          <Text style={HomeStyles.title}>{user ? `Olá, Condutor` : "Olá, Visitante"}</Text>
-          <Text style={HomeStyles.subtitle}>{chargers.length} postos na rede Aktie</Text>
+    <SafeAreaView style={GlobalStyles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
+      
+      {/* HEADER PADRONIZADO (Wrapper do GlobalStyles + Internos do HomeStyles) */}
+      <View style={GlobalStyles.headerCard}>
+        <View style={styles.headerIconContainer}>
+          <Ionicons name="flash" size={40} color={Colors.primary} />
         </View>
-        {user && (
-          <TouchableOpacity style={HomeStyles.logoutButton} onPress={handleLogout}>
-            <Text style={HomeStyles.logoutText}>Sair</Text>
+        
+        <Text style={styles.headerTitle}>
+          {user ? `Olá, Condutor` : "Explorar Rede"}
+        </Text>
+        
+        <Text style={styles.headerSubtitle}>
+          {chargers.length} postos disponíveis na Aktie
+        </Text>
+        
+        {!user && (
+          <TouchableOpacity 
+            style={styles.loginButton}
+            onPress={handleLoginPress}
+          >
+            <Text style={styles.loginButtonText}>ENTRAR NA CONTA</Text>
           </TouchableOpacity>
         )}
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* DASHBOARD DE GESTÃO (Aparece apenas se houver pedidos) */}
-        {pendingRequests.length > 0 && (
-          <View style={{ backgroundColor: Colors.primary, padding: 15, borderRadius: 20, margin: 15, elevation: 5 }}>
-            <Text style={{ color: 'white', fontWeight: 'bold', marginBottom: 12, fontSize: 16 }}>
-              ⚠️ TENS {pendingRequests.length} PEDIDOS PENDENTES!
-            </Text>
-            <FlatList 
-              data={pendingRequests}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              keyExtractor={item => item.id}
-              renderItem={({ item }) => (
-                <View style={{ backgroundColor: 'white', padding: 15, borderRadius: 15, marginRight: 12, width: 260 }}>
-                  <Text style={{ fontWeight: 'bold', color: Colors.dark }} numberOfLines={1}>{item.charger_address}</Text>
-                  <Text style={{ fontSize: 12, color: Colors.gray, marginTop: 4 }}>Total: {item.total_price}€</Text>
-                  
-                  <View style={{ flexDirection: 'row', marginTop: 12 }}>
-                    <TouchableOpacity 
-                      onPress={() => handleAction(item.id, 'accepted')}
-                      style={{ backgroundColor: Colors.success, padding: 8, borderRadius: 8, flex: 1, alignItems: 'center', marginRight: 8 }}
-                    >
-                      <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 12 }}>ACEITAR</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity 
-                      onPress={() => handleAction(item.id, 'rejected')}
-                      style={{ backgroundColor: Colors.danger, padding: 8, borderRadius: 8, flex: 1, alignItems: 'center' }}
-                    >
-                      <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 12 }}>RECUSAR</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              )}
-            />
-          </View>
-        )}
+      {/* LISTA DE POSTOS */}
+      <FlatList
+        data={chargers}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+        renderItem={({ item }) => {
+          // Lógica de cores dinâmicas para o estado do posto
+          const badgeBgColor = item.is_active ? Colors.success + '20' : Colors.danger + '20';
+          const badgeTextColor = item.is_active ? Colors.success : Colors.danger;
 
-        {/* LISTA DE POSTOS DISPONÍVEIS */}
-        <View style={{ paddingHorizontal: 15 }}>
-          <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10, color: Colors.dark }}>Explorar Rede</Text>
-          {chargers.map((item) => (
-            <View key={item.id} style={HomeStyles.card}>
-              <View style={HomeStyles.cardHeader}>
-                <Text style={HomeStyles.cardTitle}>{item.morada || "Sem morada"}</Text>
-                <View style={item.is_active ? HomeStyles.badgeActive : HomeStyles.badgeInactive} />
+          return (
+            <TouchableOpacity 
+              style={GlobalStyles.cardItem}
+              activeOpacity={0.8}
+              onPress={() => navigation.navigate('ChargerDetails', { charger: item })}
+            >
+              <View style={styles.cardHeaderRow}>
+                <Text style={styles.cardAddress} numberOfLines={1}>
+                  {item.morada || "Sem morada"}
+                </Text>
+                
+                <View style={[styles.badgeBase, { backgroundColor: badgeBgColor }]}>
+                   <Text style={[styles.badgeTextBase, { color: badgeTextColor }]}>
+                      {item.is_active ? 'ATIVO' : 'INATIVO'}
+                   </Text>
+                </View>
               </View>
-              <Text style={HomeStyles.cardInfo}>Potência: {item.potencia_kw} kW • {item.tipo_tomada}</Text>
-              <Text style={HomeStyles.cardPrice}>{item.preco_kwh} €/kWh</Text>
-              {!user && (
-                <Text style={{fontSize: 10, color: Colors.primary, marginTop: 5}}>Faz login para reservar</Text>
-              )}
-            </View>
-          ))}
-        </View>
-      </ScrollView>
-    </View>
+              
+              <View style={styles.cardDetailsRow}>
+                <MaterialCommunityIcons name="ev-plug-type2" size={16} color={Colors.gray} />
+                <Text style={styles.cardDetailsText}>
+                  {item.potencia_kw} kW • {item.tipo_tomada}
+                </Text>
+              </View>
+
+              <View style={styles.cardFooterRow}>
+                <Text style={styles.cardPriceText}>
+                  {item.preco_kwh} €<Text style={styles.cardPriceUnit}>/kWh</Text>
+                </Text>
+                
+                {!user && (
+                  <Text style={styles.loginRequiredBadge}>
+                    Login Necessário
+                  </Text>
+                )}
+              </View>
+            </TouchableOpacity>
+          );
+        }}
+      />
+    </SafeAreaView>
   );
 };
 

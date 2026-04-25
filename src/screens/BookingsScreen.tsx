@@ -1,19 +1,10 @@
+// src/screens/BookingsScreen.tsx
 import React, { useEffect, useState } from 'react';
-import { 
-  View, 
-  Text, 
-  FlatList, 
-  ActivityIndicator, 
-  SafeAreaView, 
-  TouchableOpacity, 
-  Alert 
-} from 'react-native';
-import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
+import { View, Text, FlatList, ActivityIndicator, SafeAreaView, TouchableOpacity, Alert, StatusBar } from 'react-native';
+import { collection, query, where, onSnapshot, orderBy, doc, updateDoc, Timestamp, getDocs } from 'firebase/firestore';
 import { db } from '../config/firebaseConfig';
 import { useAuth } from '../context/AuthContext';
-import { cancelBooking } from '../services/ChargerService';
-import { BookingsStyles as styles } from '../styles/Screens/BookingsStyles';
-import { Colors } from '../styles/GlobalStyles';
+import { Colors, GlobalStyles } from '../styles/GlobalStyles';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 const BookingsScreen = ({ navigation }: any) => {
@@ -23,136 +14,143 @@ const BookingsScreen = ({ navigation }: any) => {
 
   useEffect(() => {
     if (!user) {
-      setLoading(false);
-      return;
+        setLoading(false);
+        return;
     }
 
     const q = query(
       collection(db, "bookings"),
       where("user_uid", "==", user.uid),
-      orderBy("start_time", "desc")
+      where("status", "in", ["pending", "accepted", "active"]),
+      orderBy("start_time", "asc")
     );
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setBookings(data);
+    const unsubscribe = onSnapshot(q, (snap) => {
+      setBookings(snap.docs.map(d => ({ id: d.id, ...d.data() })));
       setLoading(false);
-    }, (error) => {
-      console.error("Erro Bookings:", error);
+    }, (err) => {
+      console.error(err);
       setLoading(false);
     });
 
     return () => unsubscribe();
   }, [user]);
 
-  const formatDate = (timestamp: any) => {
-    if (!timestamp) return "";
-    const date = timestamp.toDate();
-    return date.toLocaleString('pt-PT', { 
-      day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' 
-    });
-  };
+  const handleStartCharging = async (bookingId: string) => {
+    if (!user) return;
+    setLoading(true);
 
-  const handleCancelReservation = (bookingId: string) => {
-    Alert.alert(
-      "Cancelar Reserva",
-      "Tens a certeza que queres cancelar esta solicitação?",
-      [
-        { text: "Não", style: "cancel" },
-        { 
-          text: "Sim, Cancelar", 
-          style: "destructive",
-          onPress: async () => {
-            const result = await cancelBooking(bookingId);
-            if (!result.success) {
-              Alert.alert("Erro", "Não foi possível cancelar a reserva.");
+    try {
+      const concurrencyQuery = query(
+        collection(db, "bookings"),
+        where("user_uid", "==", user.uid),
+        where("status", "==", "active")
+      );
+
+      const activeSessionsSnap = await getDocs(concurrencyQuery);
+
+      if (!activeSessionsSnap.empty) {
+        setLoading(false);
+        Alert.alert("AÇÃO BLOQUEADA", "Já tens um carregamento em curso noutro posto.");
+        return;
+      }
+
+      Alert.alert(
+        "Confirmar Carregamento",
+        "Desejas iniciar a sessão agora?",
+        [
+          { text: "Cancelar", style: "cancel", onPress: () => setLoading(false) },
+          { 
+            text: "Sim, Iniciar", 
+            onPress: async () => {
+              try {
+                await updateDoc(doc(db, "bookings", bookingId), {
+                  status: 'active',
+                  session_start: Timestamp.now()
+                });
+                setLoading(false);
+                navigation.navigate('ActiveSession', { bookingId });
+              } catch (updateError) {
+                setLoading(false);
+                Alert.alert("ERRO", "Falha de permissões no Firestore.");
+              }
             }
           }
-        }
-      ]
-    );
-  };
+        ]
+      );
 
-  const getStatusConfig = (status: string) => {
-    switch (status) {
-      case 'accepted': return { label: 'ACEITE', color: Colors.success, bg: Colors.primaryLight };
-      case 'rejected': return { label: 'RECUSADA', color: Colors.danger, bg: Colors.dangerLight };
-      case 'cancelled': return { label: 'CANCELADA', color: Colors.gray, bg: '#ECEFF1' };
-      case 'completed': return { label: 'CONCLUÍDA', color: Colors.dark, bg: Colors.border };
-      default: return { label: 'PENDENTE', color: Colors.warning, bg: '#FFF3E0' };
+    } catch (error: any) {
+      setLoading(false);
+      Alert.alert("ERRO TÉCNICO", "Falha ao verificar a integridade da sessão.");
     }
   };
 
   const renderItem = ({ item }: any) => {
-    const statusCfg = getStatusConfig(item.status);
-    const isPending = item.status === 'pending';
-    const chargerDeleted = item.charger_is_deleted === true;
+    const isAccepted = item.status === 'accepted';
+    const isActive = item.status === 'active';
 
     return (
-      <TouchableOpacity 
-        style={[styles.bookingCard, chargerDeleted && { opacity: 0.8 }]}
-        onPress={() => navigation.navigate('BookingDetails', { booking: item })}
-        activeOpacity={0.7}
-      >
-        <View style={styles.headerRow}>
-          <Text style={styles.address} numberOfLines={1}>{item.charger_address}</Text>
-          <View style={[styles.statusBadge, { backgroundColor: statusCfg.bg }]}>
-            <Text style={[styles.statusText, { color: statusCfg.color }]}>{statusCfg.label}</Text>
-          </View>
-        </View>
-
-        {chargerDeleted && (
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
-            <Ionicons name="warning" size={14} color={Colors.danger} />
-            <Text style={{ color: Colors.danger, fontSize: 12, marginLeft: 5, fontWeight: 'bold' }}>
-              Este posto foi removido pelo dono.
+      <View style={GlobalStyles.cardItem}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <Text style={{ fontSize: 16, fontWeight: 'bold', color: Colors.dark, flex: 1 }} numberOfLines={1}>{item.charger_address}</Text>
+          <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, backgroundColor: item.status === 'active' ? Colors.primary : Colors.primaryLight }}>
+            <Text style={{ fontSize: 10, fontWeight: 'bold', color: item.status === 'active' ? Colors.white : Colors.primary }}>
+              {item.status.toUpperCase()}
             </Text>
           </View>
-        )}
+        </View>
 
-        <View style={styles.detailsRow}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
           <Ionicons name="time-outline" size={16} color={Colors.gray} />
-          <Text style={styles.detailsText}>{formatDate(item.start_time)}</Text>
+          <Text style={{ fontSize: 14, color: Colors.gray, marginLeft: 8 }}>{item.start_time?.toDate().toLocaleString('pt-PT')}</Text>
         </View>
 
-        <View style={styles.detailsRow}>
-          <MaterialCommunityIcons name="lightning-bolt-outline" size={16} color={Colors.gray} />
-          <Text style={styles.detailsText}>
-            Estimado: {item.estimated_kwh} kWh • {item.total_price} €
-          </Text>
-        </View>
-
-        {isPending && !chargerDeleted && (
+        {isAccepted && (
           <TouchableOpacity 
-            style={{ marginTop: 15, padding: 10, borderTopWidth: 1, borderTopColor: '#EEE', alignItems: 'center' }}
-            onPress={() => handleCancelReservation(item.id)}
+            style={{ backgroundColor: Colors.primary, marginTop: 20, padding: 15, borderRadius: 12, alignItems: 'center' }}
+            onPress={() => handleStartCharging(item.id)}
           >
-            <Text style={{ color: Colors.danger, fontWeight: 'bold', fontSize: 12 }}>CANCELAR SOLICITAÇÃO</Text>
+            <Text style={{ color: Colors.white, fontWeight: 'bold' }}>INICIAR CARREGAMENTO</Text>
           </TouchableOpacity>
         )}
-      </TouchableOpacity>
+
+        {isActive && (
+          <TouchableOpacity 
+            style={{ marginTop: 15, borderWidth: 1.5, borderColor: Colors.primary, padding: 12, borderRadius: 10, alignItems: 'center' }}
+            onPress={() => navigation.navigate('ActiveSession', { bookingId: item.id })}
+          >
+            <Text style={{ color: Colors.primary, fontWeight: 'bold' }}>VER SESSÃO ATIVA</Text>
+          </TouchableOpacity>
+        )}
+      </View>
     );
   };
 
+  if (loading) return <View style={{flex:1, justifyContent:'center'}}><ActivityIndicator size="large" color={Colors.primary} /></View>;
+
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={{ paddingHorizontal: 20, paddingTop: 20 }}>
-        <Text style={styles.title}>As Minhas Reservas</Text>
+    <SafeAreaView style={GlobalStyles.container}>
+      <StatusBar barStyle="dark-content" />
+      
+      {/* HEADER PADRONIZADO (Estilo Perfil) */}
+      <View style={GlobalStyles.headerCard}>
+        <View style={{ backgroundColor: Colors.primaryLight, padding: 15, borderRadius: 40, marginBottom: 15 }}>
+          <Ionicons name="calendar" size={40} color={Colors.primary} />
+        </View>
+        <Text style={{ fontSize: 22, fontWeight: '800', color: Colors.dark }}>
+          Minhas Reservas
+        </Text>
+        <Text style={{ fontSize: 14, color: Colors.gray, fontWeight: '500', marginTop: 5 }}>
+          As tuas sessões ativas e agendadas
+        </Text>
       </View>
+
       <FlatList
         data={bookings}
-        keyExtractor={(item) => item.id}
+        keyExtractor={item => item.id}
         renderItem={renderItem}
-        contentContainerStyle={styles.listContent}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <MaterialCommunityIcons name="calendar-remove" size={80} color={Colors.border} />
-            <Text style={styles.emptyText}>Ainda não tens reservas feitas.</Text>
-          </View>
-        }
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 20 }}
+        ListEmptyComponent={<Text style={{ textAlign: 'center', marginTop: 40, color: Colors.gray }}>Não tens nenhum carregamento planeado.</Text>}
       />
     </SafeAreaView>
   );

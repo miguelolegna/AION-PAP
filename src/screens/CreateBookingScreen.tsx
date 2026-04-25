@@ -156,9 +156,6 @@ const CreateBookingScreen = ({ route, navigation }: any) => {
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.content}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={{ alignSelf: 'flex-end', marginBottom: 10 }}>
-          <Ionicons name="close-circle" size={32} color={Colors.gray} />
-        </TouchableOpacity>
 
         {/* Informação do Carregador */}
         <View style={styles.stationCard}>

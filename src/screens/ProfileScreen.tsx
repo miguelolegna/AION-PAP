@@ -30,7 +30,7 @@ const ProfileScreen = ({ navigation }: any) => {
           Sessão não iniciada
         </Text>
         <Text style={{ textAlign: 'center', color: Colors.gray, marginTop: 10, marginBottom: 30 }}>
-          Inicia sessão para gerires os teus carregadores, veres o teu histórico e fazeres reservas.
+          Inicie sessão para gerir os seus carregadores, ver o seu histórico e fazer reservas.
         </Text>
         
         <TouchableOpacity 
@@ -44,7 +44,7 @@ const ProfileScreen = ({ navigation }: any) => {
           style={{ marginTop: 20 }}
           onPress={() => navigation.navigate('Auth', { screen: 'Register' })} // Ajusta se o nome for diferente
         >
-          <Text style={{ color: Colors.primary, fontWeight: 'bold' }}>Não tens conta? Criar agora</Text>
+          <Text style={{ color: Colors.primary, fontWeight: 'bold' }}>Não tem conta? Crie agora</Text>
         </TouchableOpacity>
       </View>
     );
@@ -78,14 +78,22 @@ const ProfileScreen = ({ navigation }: any) => {
         <MenuOption 
           icon="calendar-clock" 
           label="Histórico de Ganhos" 
-          onPress={() => navigation.navigate('History', { mode: 'host' })} 
+          onPress={() => navigation.navigate('History', { mode: 'host' })} // FIX: Adicionado mode
         />
       </View>
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Condutor</Text>
-        <MenuOption icon="history" label="Histórico de Carregamentos" onPress={() => {}} />
-        <MenuOption icon="credit-card-outline" label="Pagamentos" onPress={() => {}} />
+        <MenuOption 
+          icon="history" 
+          label="Histórico de Carregamentos" 
+          onPress={() => navigation.navigate('History', { mode: 'driver' })} // FIX: Agora funcional
+        />
+        <MenuOption 
+          icon="credit-card-outline" 
+          label="Pagamentos" 
+          onPress={() => navigation.navigate('Payments')} // Rota para o novo módulo D4
+        />
       </View>
 
       <View style={styles.section}>

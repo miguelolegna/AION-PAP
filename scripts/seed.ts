@@ -15,8 +15,8 @@ async function seedDatabase() {
   try {
     const userId = "user_ts_demo";
     const userData = {
-      nome: "Tiago Aktie",
-      email: "tiago@aktie.com",
+      nome: "Tiago AION",
+      email: "tiago@AION.com",
       telefone: "+351910000000",
       rating_medio: 5.0,
       fcm_token: "",

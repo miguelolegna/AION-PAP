@@ -1,119 +1,103 @@
+// src/styles/Screens/HomeStyles.ts
 import { StyleSheet } from 'react-native';
 import { Colors } from '../GlobalStyles';
 
 export const HomeStyles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: Colors.background, 
-    paddingTop: 50, 
-    marginBottom: 100
-  },
-  
-  center: { 
+  loadingContainer: {
     flex: 1, 
     justifyContent: 'center', 
-    alignItems: 'center' 
+    backgroundColor: Colors.background 
   },
-  
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    marginBottom: 20,
+  // Elementos do Header
+  headerIconContainer: {
+    backgroundColor: Colors.primaryLight, 
+    padding: 15, 
+    borderRadius: 40, 
+    marginBottom: 15 
   },
-  
-  title: { 
-    fontSize: 24, 
-    fontWeight: 'bold', 
+  headerTitle: {
+    fontSize: 22, 
+    fontWeight: '800', 
     color: Colors.dark 
   },
-  
-  subtitle: { 
+  headerSubtitle: {
     fontSize: 14, 
-    color: Colors.primary 
+    color: Colors.gray, 
+    fontWeight: '500', 
+    marginTop: 5 
   },
-  
-  // Botões
-  logoutButton: {
-    backgroundColor: Colors.dangerLight, 
-    paddingVertical: 8, 
-    paddingHorizontal: 12, 
-    borderRadius: 8,
-    borderWidth: 1, 
-    borderColor: Colors.danger
-  },
-  logoutText: { 
-    color: Colors.danger, 
-    fontWeight: 'bold', 
-    fontSize: 14 
-  },
-
   loginButton: {
+    marginTop: 20, 
     backgroundColor: Colors.primary, 
-    paddingVertical: 8, 
-    paddingHorizontal: 12, 
-    borderRadius: 8,
+    paddingVertical: 12, 
+    paddingHorizontal: 30, 
+    borderRadius: 25, 
+    elevation: 3 
   },
-  loginText: { 
+  loginButtonText: {
     color: Colors.white, 
     fontWeight: 'bold', 
-    fontSize: 14 
+    letterSpacing: 0.5 
   },
-
-  // Cards
-  card: {
-    backgroundColor: Colors.white,
-    marginHorizontal: 20, 
-    marginBottom: 15, 
-    padding: 15, 
-    borderRadius: 12,
-    // Sombra
-    shadowColor: Colors.shadow, 
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05, 
-    shadowRadius: 3, 
-    elevation: 3,
+  // Elementos da Lista e Cartões
+  listContent: {
+    paddingHorizontal: 20, 
+    paddingBottom: 100 
   },
-  
-  cardHeader: { 
+  cardHeaderRow: {
     flexDirection: 'row', 
     justifyContent: 'space-between', 
     alignItems: 'center', 
-    marginBottom: 5 
+    marginBottom: 12 
   },
-  
-  cardTitle: { 
-    fontWeight: 'bold', 
+  cardAddress: {
     fontSize: 16, 
+    fontWeight: 'bold', 
     color: Colors.dark, 
     flex: 1 
   },
-  
-  cardInfo: { 
+  badgeBase: {
+    paddingHorizontal: 8, 
+    paddingVertical: 4, 
+    borderRadius: 8 
+  },
+  badgeTextBase: {
+    fontSize: 10, 
+    fontWeight: 'bold' 
+  },
+  cardDetailsRow: {
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    marginTop: 5 
+  },
+  cardDetailsText: {
     fontSize: 14, 
     color: Colors.gray, 
-    marginBottom: 5 
+    marginLeft: 8 
   },
-  
-  cardPrice: { 
-    fontSize: 16, 
+  cardFooterRow: {
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'flex-end', 
+    marginTop: 15 
+  },
+  cardPriceText: {
+    fontSize: 20, 
     fontWeight: 'bold', 
     color: Colors.primary 
   },
-  
-  // Badges de Estado
-  badgeActive: { 
-    width: 10, 
-    height: 10, 
-    borderRadius: 5, 
-    backgroundColor: Colors.success 
+  cardPriceUnit: {
+    fontSize: 14, 
+    color: Colors.gray, 
+    fontWeight: '500' 
   },
-  
-  badgeInactive: { 
-    width: 10, 
-    height: 10, 
-    borderRadius: 5, 
-    backgroundColor: Colors.danger 
+  loginRequiredBadge: {
+    fontSize: 11, 
+    color: Colors.danger, 
+    fontWeight: 'bold', 
+    backgroundColor: Colors.dangerLight, 
+    paddingHorizontal: 6, 
+    paddingVertical: 2, 
+    borderRadius: 4 
   }
 });

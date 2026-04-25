@@ -1,11 +1,11 @@
+// app.config.js
 import 'dotenv/config';
 
 export default {
   expo: {
     name: "AION",
-    slug: "AION",
+    slug: "Aktie",
     version: "1.0.0",
-    // Icon principal (iOS/Expo Go)
     icon: "./assets/icon.png", 
     userInterfaceStyle: "light",
     newArchEnabled: true,
@@ -18,14 +18,14 @@ export default {
 
     android: {
       package: "com.miguell.aktie",
-      largeHeap: true, // Corrigido: Mantido apenas uma vez
+      largeHeap: true,
       adaptiveIcon: {
         foregroundImage: "./assets/logos/adaptive-icon.png",
         backgroundColor: "#ffffff"
       },
       config: {
         googleMaps: {
-          apiKey: process.env.GOOGLE_MAPS_API_KEY
+          apiKey: process.env.EXPO_PUBLIC_EXPO_PUBLIC_GOOGLE_MAPS_API_KEY
         }
       },
       edgeToEdgeEnabled: true,
@@ -45,10 +45,16 @@ export default {
         {
           "locationAlwaysAndWhenInUsePermission": "Permite que a Aktie aceda à tua localização para encontrar postos próximos."
         }
+      ],
+      [
+        "@stripe/stripe-react-native",
+        {
+          "merchantIdentifier": "merchant.com.miguell.aktie",
+          "enableGooglePay": true
+        }
       ]
     ],
 
-    // CORREÇÃO: O bloco extra deve estar aqui, fora de 'android'
     extra: {
       eas: {
         projectId: "7896334b-67ff-4283-a517-e1dda62e27bd"

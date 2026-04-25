@@ -1,12 +1,12 @@
 <a href="https://1drv.ms/w/c/98ab40da42f0f36d/IQAEjXmLt5tjTJI6E45bsWv-AZ361COnHzsfM1ucDxpNNo8?e=7bUw2x" target="_blank">Documentaçao word</a> <br>
 <a href="https://www.canva.com/design/DAG1YS--c9M/YzNyTrbd78JQgYZAm8Tkiw/edit?utm_content=DAG1YS--c9M&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton" target="_blank">Apresentação Canva</a>
 
-Resumo do Projeto: Aktie (VE Charging Share) <br>
+Resumo do Projeto: AION (VE Charging Share) <br>
 <b>Título</b> <br>
-Aktie: Aplicação Inteligente de Partilha de carregadores elétricos
+AION: Aplicação Inteligente de Partilha de carregadores elétricos
 
 <b>Descrição</b>: <br>
-Aktie é uma aplicação móvel inovadora desenvolvida no âmbito de um Projeto de Aptidão Profissional (PAP), com o objetivo de resolver o crescente desafio da mobilidade elétrica: a escassez de postos de carregamento públicos e os seus custos elevados.
+AION é uma aplicação móvel inovadora desenvolvida no âmbito de um Projeto de Aptidão Profissional (PAP), com o objetivo de resolver o crescente desafio da mobilidade elétrica: a escassez de postos de carregamento públicos e os seus custos elevados.
 
 A plataforma conecta proprietários de carregadores de VE domésticos com utilizadores na sua área, permitindo que os proprietários partilhem a sua infraestrutura e os utilizadores acedam a uma rede de carregamento mais acessível, descentralizada e disponível. Este projeto demonstra a capacidade de planear e executar uma solução Full-Stack moderna para um problema real de mercado.
 
@@ -26,4 +26,4 @@ A plataforma conecta proprietários de carregadores de VE domésticos com utiliz
 
 <b>Sistema de Custo</b>: Cálculo preciso do custo de carregamento por sessão.
 
-<b>Aktie visa promover uma comunidade de partilha, tornando o uso de veículos elétricos mais prático e económico para todos.</b>
+<b>AION visa promover uma comunidade de partilha, tornando o uso de veículos elétricos mais prático e económico para todos.</b>

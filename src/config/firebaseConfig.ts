@@ -9,6 +9,7 @@ import {
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getFunctions } from 'firebase/functions'; // ADICIONA ISTO
 
 const firebaseConfig = {
   apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
@@ -20,6 +21,8 @@ const firebaseConfig = {
 };
 
 const app: FirebaseApp = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+const functions = getFunctions(app); // ADICIONA ISTO
+const db = getFirestore(app);
 
 /**
  * Persistência oficial corrigida para silenciar o log e o TS
@@ -29,5 +32,4 @@ const authInstance: Auth = initializeAuth(app, {
 });
 
 export const auth = authInstance; 
-export const db = getFirestore(app);
-export const storage = getStorage(app);
+export { app, db, functions }; // GARANTE QUE EXPORTAS 'functions'

@@ -206,7 +206,7 @@ const AddChargerScreen = ({ navigation }: any) => {
 
           <TouchableOpacity style={styles.mapTrigger} onPress={() => setIsMapPickerVisible(true)}>
             <MaterialIcons name="map" size={20} color={Colors.primary} />
-            <Text style={styles.mapTriggerText}>{confirmedCoords ? "✓ Localização definida" : "Definir no mapa (Uber Style)"}</Text>
+            <Text style={styles.mapTriggerText}>{confirmedCoords ? "✓ Localização definida" : "Definir no mapa"}</Text>
           </TouchableOpacity>
 
           <View style={styles.row}>

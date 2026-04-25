@@ -1,3 +1,4 @@
+// src/screens/MyChargersScreen.tsx
 import React, { useState, useEffect } from 'react';
 import { View, FlatList, Text, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
 import { collection, query, where, onSnapshot, doc, deleteDoc } from 'firebase/firestore';
@@ -57,15 +58,33 @@ const MyChargersScreen = ({ navigation }: any) => {
           <View style={styles.emptyContainer}>
             <Ionicons name="flash-off" size={50} color={Colors.gray} />
             <Text style={styles.emptyText}>Não tens postos registados na tua rede.</Text>
-            <TouchableOpacity 
-              onPress={() => navigation.navigate('AddCharger')}
-              style={{ marginTop: 20, backgroundColor: Colors.primary, padding: 12, borderRadius: 10 }}
-            >
-              <Text style={{ color: 'white', fontWeight: 'bold' }}>ADICIONAR PRIMEIRO POSTO</Text>
-            </TouchableOpacity>
+            {/* O botão aqui foi removido pois agora existe o FAB global */}
           </View>
         }
       />
+
+      {/* FAB - Floating Action Button (Sempre Visível) */}
+      <TouchableOpacity 
+        style={{
+          position: 'absolute',
+          bottom: 30,
+          right: 30,
+          backgroundColor: Colors.primary,
+          width: 60,
+          height: 60,
+          borderRadius: 30,
+          justifyContent: 'center',
+          alignItems: 'center',
+          elevation: 8,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.3,
+          shadowRadius: 5,
+        }}
+        onPress={() => navigation.navigate('AddCharger')}
+      >
+        <Ionicons name="add" size={32} color="white" />
+      </TouchableOpacity>
     </View>
   );
 };

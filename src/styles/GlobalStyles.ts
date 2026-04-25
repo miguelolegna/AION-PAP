@@ -1,5 +1,5 @@
 // src/styles/GlobalStyles.ts
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 
 export const Colors = {
   primary: '#00BFA5',
@@ -41,5 +41,30 @@ export const GlobalStyles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 4,
+  },
+  headerCard: {
+    alignItems: 'center',
+    paddingTop: Platform.OS === 'ios' ? 50 : 30, // Reduzido de 60/50
+    paddingBottom: 20, // Reduzido de 30
+    backgroundColor: Colors.white,
+    borderBottomLeftRadius: 30, // Reduzido de 40 para acompanhar a altura menor
+    borderBottomRightRadius: 30,
+    shadowColor: Colors.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 6,
+    marginBottom: 15,
+  },
+  cardItem: {
+    backgroundColor: Colors.white,
+    padding: 18,
+    borderRadius: 20,
+    marginBottom: 12,
+    shadowColor: Colors.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 2,
   }
 });

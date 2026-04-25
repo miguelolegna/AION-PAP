@@ -67,7 +67,7 @@ const AuthScreen = ({ navigation }: any) => {
         style={{ flex: 1 }}
       >
         <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
-          <Text style={styles.headerTitle}>Aktie</Text>
+          <Text style={styles.headerTitle}>AION</Text>
           <Text style={styles.subTitle}>
             {isLogin ? 'Bem-vindo de volta' : 'Cria a tua conta'}
           </Text>
@@ -89,7 +89,7 @@ const AuthScreen = ({ navigation }: any) => {
             <Text style={styles.inputLabel}>Email</Text>
             <TextInput 
               style={styles.input} 
-              placeholder="exemplo@aktie.com" 
+              placeholder="exemplo@AION.com" 
               value={email} 
               onChangeText={setEmail} 
               autoCapitalize="none" 

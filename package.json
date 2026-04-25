@@ -1,5 +1,5 @@
 {
-  "name": "aktie",
+  "name": "AION",
   "version": "1.0.0",
   "main": "node_modules/expo/AppEntry.js",
   "scripts": {
@@ -15,6 +15,7 @@
     "@react-navigation/bottom-tabs": "^6.6.1",
     "@react-navigation/native": "^6.1.18",
     "@react-navigation/native-stack": "^6.11.0",
+    "@stripe/stripe-react-native": "0.38.6",
     "dotenv": "^17.2.3",
     "expo": "~52.0.25",
     "expo-asset": "~11.0.5",
@@ -28,6 +29,7 @@
     "expo-status-bar": "~2.0.1",
     "expo-video": "~2.0.3",
     "firebase": "10.13.2",
+    "lottie-react-native": "7.1.0",
     "react": "18.3.1",
     "react-native": "0.76.9",
     "react-native-maps": "1.18.0",
