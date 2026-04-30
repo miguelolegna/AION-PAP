@@ -8,7 +8,7 @@ export default ({ config }) => {
   return {
     ...config,
     name: "AION",
-    slug: "AION", // Alterado de Aktie para AION
+    slug: "Aktie",
     version: "1.0.0",
     newArchEnabled: true,
     sdkVersion: "52.0.0",
