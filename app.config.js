@@ -1,24 +1,35 @@
 import 'dotenv/config';
 
 export default ({ config }) => {
-  // LOG DE DEBUG - Vai aparecer no terminal ao correr o npx expo config
   console.log("------------------------------------------");
   console.log("DEBUG: A carregar API Key:", process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY ? "Detectada" : "FALHOU");
   console.log("------------------------------------------");
 
   return {
-    ...config, // Mantém as configurações base do Expo
+    ...config,
     name: "AION",
-    slug: "Aktie",
+    slug: "AION", // Alterado de Aktie para AION
     version: "1.0.0",
     newArchEnabled: true,
     sdkVersion: "52.0.0",
     
+    // A CAMADA VISUAL RESTAURADA
+    icon: "./assets/icon.png", 
+    userInterfaceStyle: "light",
+    splash: {
+      image: "./assets/logos/adaptive-icon.png", 
+      resizeMode: "contain",
+      backgroundColor: "#ffffff"
+    },
+
     android: {
-      ...config.android, // Garante que não perdemos nada
-      package: "com.miguell.aktie",
+      ...config.android,
+      package: "com.miguell.aktie", // ATENÇÃO: NÃO alteres isto para aion, ou vais corromper todo o projeto Android.
       largeHeap: true,
-      // AQUI ESTÁ O BLOCO CRÍTICO
+      adaptiveIcon: {
+        foregroundImage: "./assets/logos/adaptive-icon.png",
+        backgroundColor: "#ffffff"
+      },
       config: {
         googleMaps: {
           apiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY
@@ -31,7 +42,10 @@ export default ({ config }) => {
       ]
     },
 
-    // Garante que os plugins estão incluídos
+    web: {
+      favicon: "./assets/logos/adaptive-icon.png"
+    },
+
     plugins: [
       "expo-video",
       "expo-asset",
