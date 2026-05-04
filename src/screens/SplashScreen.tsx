@@ -87,7 +87,7 @@ const SmartSplashScreen: React.FC<SmartSplashScreenProps> = ({ isLoading, onPrep
 
       {/* INJEÇÃO DA IMAGEM ESTÁTICA COM EXTENSÃO CORRIGIDA */}
       <Image 
-        source={require('../../assets/logos/full_logo_better.jpeg')} 
+        source={require('../../assets/logos/adaptive-icon.png')} 
         style={styles.imageView}
         resizeMode="contain"
       />

@@ -130,21 +130,37 @@ export const createStripePaymentIntent = onCall({ secrets: ["STRIPE_SECRET_KEY"]
     if (!bookingSnap.exists) throw new Error("Reserva inexistente.");
     const bookingData = bookingSnap.data();
 
+    // Infallibility: Garantir que apenas o dono da reserva efetua o pagamento
+    if (bookingData?.user_uid !== uid) {
+        throw new Error("Tentativa de pagamento em reserva alheia.");
+    }
+
     const chargerSnap = await db.collection("chargers").doc(bookingData?.charger_id).get();
     const potenciaKw = chargerSnap.data()?.potencia_kw || 3.7;
 
+    // Cálculo Cego (Ignora valores enviados pelo cliente)
     const finalAmountEuros = calcularPrecoFinal(potenciaKw, duracaoHoras);
     const amountCents = Math.round(finalAmountEuros * 100);
 
+    // Geração do PaymentIntent com Retenção Manual (Pre-auth)
     const paymentIntent = await stripe.paymentIntents.create({
         amount: amountCents,
         currency: "eur",
-        metadata: { bookingId, userUid: uid }
+        capture_method: "manual",
+        automatic_payment_methods: { 
+            enabled: true 
+        },
+        metadata: { 
+            bookingId: bookingId, 
+            userUid: uid,
+            hostUid: bookingData?.owner_uid 
+        }
     });
 
+    // Atualiza o Firestore para a fase de transição (Sessão Iniciada)
     await bookingRef.update({
         custo_total: finalAmountEuros,
-        status: "aguarda_pagamento",
+        status: "em_curso", // Alinhado com as Security Rules corrigidas
         stripe_payment_intent_id: paymentIntent.id
     });
 

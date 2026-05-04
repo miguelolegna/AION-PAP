@@ -1,7 +1,7 @@
 // src/screens/BookingsScreen.tsx
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, ActivityIndicator, SafeAreaView, TouchableOpacity, Alert, StatusBar } from 'react-native';
-import { collection, query, where, onSnapshot, orderBy, doc, updateDoc, Timestamp, getDocs } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, orderBy, getDocs } from 'firebase/firestore'; 
 import { db } from '../config/firebaseConfig';
 import { useAuth } from '../context/AuthContext';
 import { Colors, GlobalStyles } from '../styles/GlobalStyles';
@@ -41,6 +41,7 @@ const BookingsScreen = ({ navigation }: any) => {
     setLoading(true);
 
     try {
+      // Regra de Concorrência: Bloquear se já existir uma sessão ativa
       const concurrencyQuery = query(
         collection(db, "bookings"),
         where("user_uid", "==", user.uid),
@@ -55,25 +56,17 @@ const BookingsScreen = ({ navigation }: any) => {
         return;
       }
 
+      // Delegação Financeira: O frontend não altera a base de dados. Delega para a PaymentsScreen.
       Alert.alert(
-        "Confirmar Carregamento",
-        "Desejas iniciar a sessão agora?",
+        "Autorizar Pagamento",
+        "É necessário reter os fundos antes de iniciar a sessão.",
         [
           { text: "Cancelar", style: "cancel", onPress: () => setLoading(false) },
           { 
-            text: "Sim, Iniciar", 
-            onPress: async () => {
-              try {
-                await updateDoc(doc(db, "bookings", bookingId), {
-                  status: 'active',
-                  session_start: Timestamp.now()
-                });
-                setLoading(false);
-                navigation.navigate('ActiveSession', { bookingId });
-              } catch (updateError) {
-                setLoading(false);
-                Alert.alert("ERRO", "Falha de permissões no Firestore.");
-              }
+            text: "Proceder", 
+            onPress: () => {
+              setLoading(false);
+              navigation.navigate('Payments', { bookingId: bookingId, duracao: 2 });
             }
           }
         ]
@@ -110,7 +103,7 @@ const BookingsScreen = ({ navigation }: any) => {
             style={{ backgroundColor: Colors.primary, marginTop: 20, padding: 15, borderRadius: 12, alignItems: 'center' }}
             onPress={() => handleStartCharging(item.id)}
           >
-            <Text style={{ color: Colors.white, fontWeight: 'bold' }}>INICIAR CARREGAMENTO</Text>
+            <Text style={{ color: Colors.white, fontWeight: 'bold' }}>AUTORIZAR PAGAMENTO</Text>
           </TouchableOpacity>
         )}
 
@@ -132,7 +125,6 @@ const BookingsScreen = ({ navigation }: any) => {
     <SafeAreaView style={GlobalStyles.container}>
       <StatusBar barStyle="dark-content" />
       
-      {/* HEADER PADRONIZADO (Estilo Perfil) */}
       <View style={GlobalStyles.headerCard}>
         <View style={{ backgroundColor: Colors.primaryLight, padding: 15, borderRadius: 40, marginBottom: 15 }}>
           <Ionicons name="calendar" size={40} color={Colors.primary} />

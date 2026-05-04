@@ -18,6 +18,8 @@ import ActiveSessionScreen from './src/screens/ActiveSessionScreen';
 import CreateBookingScreen from './src/screens/CreateBookingScreen';
 import { Colors } from './src/styles/GlobalStyles';
 import { enableScreens } from 'react-native-screens';
+import PaymentsScreen from './src/screens/PaymentsScreen';
+
 
 enableScreens(); 
 
@@ -77,6 +79,11 @@ const AppNavigator = () => (
         name="History" 
         component={HistoryScreen} 
         options={{ headerShown: true, title: 'Histórico', headerTintColor: Colors.primary }} 
+      />
+
+      <Stack.Screen 
+      name="Payments" 
+      component={PaymentsScreen} 
       />
     </Stack.Navigator>
   </NavigationContainer>

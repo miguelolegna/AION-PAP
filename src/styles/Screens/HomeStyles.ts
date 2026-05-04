@@ -99,5 +99,64 @@ export const HomeStyles = StyleSheet.create({
     paddingHorizontal: 6, 
     paddingVertical: 2, 
     borderRadius: 4 
+  },
+  
+  // Elementos das Reservas Pendentes (Novo Bloco)
+  pendingSection: {
+    marginBottom: 20,
+  },
+  pendingSectionTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: Colors.dark,
+    marginBottom: 10,
+    marginLeft: 5,
+  },
+  pendingCard: {
+    backgroundColor: Colors.warning + '15',
+    borderWidth: 1,
+    borderColor: Colors.warning + '50',
+    borderRadius: 12,
+    padding: 15,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  pendingInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  pendingTextContainer: {
+    marginLeft: 10,
+  },
+  pendingTextLabel: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: Colors.dark,
+  },
+  pendingTextSub: {
+    fontSize: 12,
+    color: Colors.gray,
+    marginTop: 2,
+  },
+  pendingActions: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  actionButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 2,
+  },
+  rejectButton: {
+    backgroundColor: Colors.danger,
+  },
+  acceptButton: {
+    backgroundColor: Colors.success,
   }
 });

@@ -1,9 +1,7 @@
 import 'dotenv/config';
 
 export default ({ config }) => {
-  console.log("------------------------------------------");
   console.log("DEBUG: A carregar API Key:", process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY ? "Detectada" : "FALHOU");
-  console.log("------------------------------------------");
 
   return {
     ...config,
