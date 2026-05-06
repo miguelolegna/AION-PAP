@@ -1,22 +1,11 @@
-import { 
-  addDoc, 
-  collection, 
-  Timestamp, 
-  serverTimestamp,
-  doc,
-  updateDoc,
-  getDocs,
-  query,
-  where
-} from 'firebase/firestore';
+// src/services/ChargerService.ts
+import { addDoc, collection, Timestamp, serverTimestamp, doc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../config/firebaseConfig';
-import * as Location from 'expo-location'; 
 
 // ==========================================
 // 1. INTERFACES DE DADOS
 // ==========================================
-
 export interface ChargerFormData {
   morada: string;
   potencia_kw: string;
@@ -26,32 +15,28 @@ export interface ChargerFormData {
   connection_type: "Socket" | "Tethered";
   access_info: string;
   owner_uid: string;
-  imageUri?: string; 
+  imageUri?: string;
   manualLat?: number;
   manualLng?: number;
 }
 
-/**
- * Interface atualizada para evitar erro ts(2353) [cite: 2025-12-09]
- */
 export interface BookingData {
-  charger_id: string;      
-  charger_address: string; 
-  user_uid: string;        
-  owner_uid: string;       
-  start_time: Date;        
-  end_time: Date;          
-  estimated_kwh: number;   
-  total_price: number;     
-  status: 'pending' | 'accepted' | 'rejected' | 'cancelled' | 'completed'; // Adicionado [cite: 2025-12-09]
-  payment_status: string;  // Adicionado para o Módulo D [cite: 2025-12-09]
-  charger_is_deleted: boolean; // Adicionado para segurança [cite: 2025-12-09]
+  charger_id: string;
+  charger_address: string;
+  user_uid: string;
+  owner_uid: string;
+  start_time: Date;
+  end_time: Date;
+  estimated_kwh: number;
+  total_price: number;
+  status: 'pending' | 'accepted' | 'rejected' | 'cancelled' | 'completed';
+  payment_status: string;
+  charger_is_deleted: boolean;
 }
 
 // ==========================================
-// 2. FUNÇÕES AUXILIARES (STORAGE & GEO)
+// 2. FUNÇÕES AUXILIARES (STORAGE)
 // ==========================================
-
 const uploadChargerImage = async (uri: string, ownerUid: string) => {
   const response = await fetch(uri);
   const blob = await response.blob();
@@ -62,6 +47,11 @@ const uploadChargerImage = async (uri: string, ownerUid: string) => {
   return await getDownloadURL(storageRef);
 };
 
+// ==========================================
+// 3. GEOCODIFICAÇÃO (CUSTO-ZERO VIA NOMINATIM)
+// ==========================================
+
+// Geocodificação Direta: Morada -> Coordenadas
 export const fetchAddressSuggestions = async (query: string) => {
   if (query.length < 5) return [];
   try {
@@ -77,25 +67,45 @@ export const fetchAddressSuggestions = async (query: string) => {
       label: item.display_name, lat: parseFloat(item.lat), lng: parseFloat(item.lon),
     }));
   } catch (error) {
+    console.error("Geocoding failed:", error);
     return [];
   }
 };
 
+// Geocodificação Inversa: Coordenadas -> Morada
 export const getAddressFromCoords = async (latitude: number, longitude: number) => {
   try {
-    const reverse = await Location.reverseGeocodeAsync({ latitude, longitude });
-    if (reverse.length > 0) {
-      const addr = reverse[0];
-      return `${addr.street || addr.name || ""}${addr.streetNumber ? ` ${addr.streetNumber}` : ""}${addr.city ? `, ${addr.city}` : ""}`.trim();
+    const baseUrl = "https://nominatim.openstreetmap.org/reverse";
+    const params = new URLSearchParams({
+      lat: latitude.toString(),
+      lon: longitude.toString(),
+      format: "json",
+      addressdetails: "1"
+    });
+
+    const response = await fetch(`${baseUrl}?${params.toString()}`, { 
+      headers: { 'User-Agent': 'Aktie-Production-v1' } 
+    });
+    
+    const data = await response.json();
+    
+    if (data && data.address) {
+      const addr = data.address;
+      const road = addr.road || addr.pedestrian || "";
+      const houseNumber = addr.house_number ? ` ${addr.house_number}` : "";
+      const city = addr.city || addr.town || addr.village || "";
+      
+      return `${road}${houseNumber}${city ? `, ${city}` : ""}`.trim() || "Morada não detetada";
     }
     return "Morada selecionada";
   } catch (error) {
+    console.error("Reverse Geocoding failed:", error);
     return "Coordenadas manuais";
   }
 };
 
 // ==========================================
-// 3. GESTÃO DE CARREGADORES
+// 4. GESTÃO DE CARREGADORES E RESERVAS
 // ==========================================
 
 export const createCharger = async (data: ChargerFormData) => {
@@ -134,10 +144,6 @@ export const createCharger = async (data: ChargerFormData) => {
   }
 };
 
-// ==========================================
-// 4. MOTOR DE RESERVAS
-// ==========================================
-
 export const createBooking = async (data: BookingData) => {
   try {
     const docRef = await addDoc(collection(db, "bookings"), {
@@ -149,7 +155,7 @@ export const createBooking = async (data: BookingData) => {
       end_time: Timestamp.fromDate(data.end_time),
       estimated_kwh: data.estimated_kwh,
       total_price: data.total_price,
-      status: data.status, // Agora aceita o valor passado pelo componente [cite: 2025-12-09]
+      status: data.status, 
       payment_status: data.payment_status,
       charger_is_deleted: data.charger_is_deleted,
       created_at: serverTimestamp()

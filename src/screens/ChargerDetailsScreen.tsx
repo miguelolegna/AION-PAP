@@ -96,7 +96,7 @@ const ChargerDetailsScreen = ({ route, navigation }: any) => {
       {/* FOOTER FIXO */}
       <View style={styles.footer}>
         <View style={styles.priceContainer}>
-          <Text style={styles.priceValue}>{charger.preco_kwh} €</Text>
+          <Text style={styles.priceValue}>{charger.preco_kwh} IONS</Text>
           <Text style={styles.priceUnit}>/kWh</Text>
         </View>
 

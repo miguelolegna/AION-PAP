@@ -38,8 +38,9 @@ const ChargerMapPopup = ({ charger, onDetailsPress, onDirectionsPress }: Charger
               <Text style={styles.infoText}>{charger.potencia_kw} kW</Text>
             </View>
             <View style={styles.infoRow}>
-              <FontAwesome6 name="euro-sign" size={12} color="#888" />
-              <Text style={styles.infoText}>{charger.preco_kwh} €/kWh</Text>
+              {/* Ícone fiduciário removido. Substituído por ícone neutro de tokens */}
+              <FontAwesome6 name="coins" size={12} color="#888" />
+              <Text style={styles.infoText}>{charger.preco_kwh} IONS/kWh</Text>
             </View>
           </View>
 

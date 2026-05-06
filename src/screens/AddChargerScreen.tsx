@@ -214,8 +214,8 @@ const AddChargerScreen = ({ navigation }: any) => {
               <Text style={styles.label}>Potência (kW) *</Text>
               <TextInput style={styles.input} keyboardType="numeric" value={form.potencia} onChangeText={(t) => setForm({...form, potencia: t})} placeholder="Ex: 22" />
             </View>
-            <View style={{ flex: 1, marginLeft: 8 }}>
-              <Text style={styles.label}>Preço (€/kWh) *</Text>
+              <View style={{ flex: 1, marginLeft: 8 }}>
+              <Text style={styles.label}>Preço (IONS/kWh) *</Text>
               <TextInput style={styles.input} keyboardType="numeric" value={form.preco} onChangeText={(t)=> setForm({...form, preco: t})} placeholder="Ex: 0.45" />
             </View>
           </View>

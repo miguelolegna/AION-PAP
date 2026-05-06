@@ -1,3 +1,4 @@
+//src/screens/MapScreen.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   View, ActivityIndicator, Text, TouchableOpacity, Animated, 
@@ -222,8 +223,8 @@ const MapScreen = () => {
                   <Text style={styles.infoText}>{selectedCharger.potencia_kw} kW</Text>
                 </View>
                 <View style={styles.infoRow}>
-                  <FontAwesome6 name="euro-sign" size={12} color="#888" />
-                  <Text style={styles.infoText}>{selectedCharger.preco_kwh} €/kWh</Text>
+                  <FontAwesome6 name="coins" size={12} color="#888" />
+                  <Text style={styles.infoText}>{selectedCharger.preco_kwh} IONS/kWh</Text>
                 </View>
               </View>
 
