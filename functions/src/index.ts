@@ -1,4 +1,3 @@
-// functions/src/index.ts
 import { onDocumentUpdated } from "firebase-functions/v2/firestore";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { onCall, onRequest, HttpsError } from "firebase-functions/v2/https";
@@ -19,29 +18,30 @@ const getStripe = (): any => {
         const key = process.env.STRIPE_SECRET_KEY;
         if (!key) return null;
         stripeInstance = new Stripe(key, {
-            apiVersion: "2026-04-22.dahlia", // Atualizado para a versão correta da API
+            apiVersion: "2026-04-22.dahlia", // Mantém uma versão estável oficial
         });
     }
     return stripeInstance;
 };
 
 // Cálculo processado na moeda virtual (IONS)
-const calcularTarifaIons = (potenciaKw: number, duracaoHoras: number, precoBaseHost: number): number => {
-    let margemPlataforma = 0;
-
-    // A plataforma extrai a sua margem com base no desgaste/nível do posto
-    if (potenciaKw <= 3.7) margemPlataforma = 0.05;      
-    else if (potenciaKw <= 22) margemPlataforma = 0.12;  
-    else margemPlataforma = 0.25;                        
-
-    const precoFinalKwh = precoBaseHost + margemPlataforma;
-    const custoTotal = precoFinalKwh * potenciaKw * duracaoHoras;
+const calcularTarifas = (potenciaKw: number, duracaoHoras: number, precoBaseHostEuros: number) => {
+    let margemEuros = potenciaKw <= 3.7 ? 0.05 : potenciaKw <= 22 ? 0.12 : 0.25;
+    const tarifaKwhEuros = precoBaseHostEuros + margemEuros;
     
-    return parseFloat(custoTotal.toFixed(2));
+    // Converte para IONS e força Inteiro (Ex: 0.35€ = 35 IONS)
+    const tarifaKwhIons = Math.round(tarifaKwhEuros * 100);
+    // Custo Máximo forçado a Inteiro
+    const custoMaximoIons = Math.round(tarifaKwhIons * potenciaKw * duracaoHoras);
+
+    return {
+        tarifaKwh: tarifaKwhIons,
+        custoMaximo: custoMaximoIons
+    };
 };
 
 // ============================================================================
-// 1. GESTÃO DE RESERVAS (LÓGICA ORIGINAL)
+// 1. GESTÃO DE RESERVAS E MODERAÇÃO
 // ============================================================================
 
 export const handleBookingAccepted = onDocumentUpdated("bookings/{bookingId}", async (event) => {
@@ -67,7 +67,7 @@ export const handleBookingAccepted = onDocumentUpdated("bookings/{bookingId}", a
                 if (data.end_time > start_time) {
                     batch.update(doc.ref, { 
                         status: "cancelled_conflict",
-                        system_note: "Conflito de horário."
+                        system_note: "Conflito de horário processado."
                     });
                 }
             }
@@ -100,13 +100,39 @@ export const monitorUserBehavior = onDocumentUpdated("bookings/{bookingId}", asy
     const oldData = event.data?.before.data();
 
     if (newData?.status === "cancelled" && oldData?.status !== "cancelled") {
-        const userRef = db.collection("users").doc(newData.user_uid);
+        const uid = newData.user_uid;
+        const userRef = db.collection("users").doc(uid);
+        
+        // Pré-carrega reservas ativas para evitar leituras de coleção dentro da transação ACID
+        const activeBookingsSnap = await db.collection("bookings")
+            .where("user_uid", "==", uid)
+            .where("status", "==", "active")
+            .get();
+
         await db.runTransaction(async (t) => {
             const userDoc = await t.get(userRef);
+            if (!userDoc.exists) return;
+
             const strikes = (userDoc.data()?.strikes || 0) + 1;
+            const isBanned = strikes >= 5;
+            let lockedToRelease = 0;
+
+            // Se o utilizador for banido, cancela sessões ativas e liberta o cativo em deadlock
+            if (isBanned) {
+                activeBookingsSnap.docs.forEach(doc => {
+                    const bData = doc.data();
+                    lockedToRelease += (bData.custo_maximo_cativo || 0);
+                    t.update(doc.ref, { 
+                        status: "cancelled_banned", 
+                        system_note: "Cancelamento administrativo automático." 
+                    });
+                });
+            }
+
             t.update(userRef, { 
                 strikes,
-                is_banned: strikes >= 5 
+                is_banned: isBanned,
+                locked_balance: admin.firestore.FieldValue.increment(-lockedToRelease)
             });
         });
     }
@@ -126,18 +152,17 @@ export const createTopUpIntent = onCall({ secrets: ["STRIPE_SECRET_KEY"] }, asyn
     if (!uid) throw new HttpsError("unauthenticated", "Não autenticado.");
     if (!amountEuros || amountEuros < 5) throw new HttpsError("invalid-argument", "Montante mínimo de Top-Up é 5€.");
 
-    // Conversão 1:1 (Ex: 10 Euros = 10 IONS)
     const amountCents = Math.round(amountEuros * 100);
 
-    // Débito imediato. Não há retenção (capture_method: "automatic"). Suporta MBWay.
     const paymentIntent = await stripe.paymentIntents.create({
         amount: amountCents,
         currency: "eur",
         automatic_payment_methods: { enabled: true },
+        // Substitui os metadados atuais por isto:
         metadata: { 
             transactionType: "topup",
             userUid: uid,
-            amountIons: amountEuros 
+            amountIons: amountCents
         }
     });
 
@@ -170,16 +195,30 @@ export const stripeWebhookHandler = onRequest({ secrets: ["STRIPE_WEBHOOK_SECRET
     if (event.type === "payment_intent.succeeded") {
         const paymentIntent = event.data.object as any;
         
-        // Verifica se é uma transação de Top-Up
         if (paymentIntent.metadata?.transactionType === "topup") {
             const uid = paymentIntent.metadata.userUid;
-            const amountIons = parseFloat(paymentIntent.metadata.amountIons);
-
+            const amountIons = parseInt(paymentIntent.metadata.amountIons, 10);           
+            const paymentId = paymentIntent.id;
+            const paymentRef = db.collection("processed_payments").doc(paymentId);
             const userRef = db.collection("users").doc(uid);
             
-            // Injeção de capital no Ledger
-            await userRef.update({
-                wallet_balance: admin.firestore.FieldValue.increment(amountIons)
+            // Garantia de Idempotência: Impede que a Stripe duplique saldo no caso de reenvio do Webhook
+            await db.runTransaction(async (t) => {
+                const paymentSnap = await t.get(paymentRef);
+                if (paymentSnap.exists) {
+                    console.log(`Webhook: Pagamento ${paymentId} já processado. Execução abortada para prevenir duplo incremento.`);
+                    return;
+                }
+                
+                t.set(paymentRef, {
+                    processed_at: admin.firestore.FieldValue.serverTimestamp(),
+                    amount: amountIons,
+                    user_uid: uid
+                });
+                
+                t.update(userRef, {
+                    wallet_balance: admin.firestore.FieldValue.increment(amountIons)
+                });
             });
         }
     }
@@ -207,12 +246,19 @@ export const iniciarSessaoCarregamento = onCall(async (request) => {
         
         const bookingData = bookingSnap.data()!;
         if (bookingData.user_uid !== uid) throw new HttpsError("permission-denied", "Reserva alheia.");
-        if (bookingData.status !== "accepted") throw new HttpsError("failed-precondition", "Estado inválido para início.");
+        
+        // Permite início direto em reservas pendentes para fluxos instantâneos (ou accepted para aprovação manual)
+        if (bookingData.status !== "accepted" && bookingData.status !== "pending") {
+            throw new HttpsError("failed-precondition", "Estado inválido para início.");
+        }
 
         const chargerSnap = await t.get(db.collection("chargers").doc(bookingData.charger_id));
         const chargerData = chargerSnap.data()!;
         
-        const custoMaximoIons = calcularTarifaIons(chargerData.potencia_kw, duracaoHoras, chargerData.p_base);
+        // CORREÇÃO CRÍTICA: Leitura exata da chave guardada no Firestore (preco_kwh) com fallback para 0
+        const precoHostEuros = chargerData.preco_kwh || 0;
+
+        const { tarifaKwh, custoMaximo } = calcularTarifas(chargerData.potencia_kw, duracaoHoras, precoHostEuros);
 
         const userSnap = await t.get(userRef);
         const userData = userSnap.data()!;
@@ -222,19 +268,19 @@ export const iniciarSessaoCarregamento = onCall(async (request) => {
         const availableBalance = walletBalance - lockedBalance;
 
         // Regra de Falha (Fail-Fast)
-        if (availableBalance < custoMaximoIons) {
-            throw new HttpsError("resource-exhausted", `Saldo insuficiente. Necessários: ${custoMaximoIons} IONS.`);
+        if (availableBalance < custoMaximo) {
+            throw new HttpsError("resource-exhausted", `Saldo insuficiente. Necessários: ${custoMaximo} IONS.`);
         }
 
-        // FASE 1: Caução Atómica (Smart Lock)
+        // FASE 1: Caução Atómica (Smart Lock) com Inteiros absolutos
         t.update(userRef, {
-            locked_balance: admin.firestore.FieldValue.increment(custoMaximoIons)
+            locked_balance: admin.firestore.FieldValue.increment(custoMaximo)
         });
 
         t.update(bookingRef, {
             status: "active",
-            custo_maximo_cativo: custoMaximoIons,
-            preco_kwh_congelado: chargerData.p_base + (chargerData.potencia_kw > 22 ? 0.25 : chargerData.potencia_kw > 3.7 ? 0.12 : 0.05),
+            custo_maximo_cativo: custoMaximo,
+            preco_kwh_congelado: tarifaKwh,
             session_start: admin.firestore.FieldValue.serverTimestamp()
         });
     });
@@ -257,7 +303,6 @@ export const finalizarSessaoCarregamento = onCall(async (request) => {
         const bookingData = bookingSnap.data()!;
         if (bookingData.status !== "active") throw new HttpsError("failed-precondition", "A reserva não está ativa.");
 
-        // Pode ser finalizado pelo condutor ou pelo anfitrião
         if (bookingData.user_uid !== uid && bookingData.owner_uid !== uid) {
             throw new HttpsError("permission-denied", "Acesso não autorizado.");
         }
@@ -265,20 +310,17 @@ export const finalizarSessaoCarregamento = onCall(async (request) => {
         const driverRef = db.collection("users").doc(bookingData.user_uid);
         const hostRef = db.collection("users").doc(bookingData.owner_uid);
 
-        // Cálculo Exato
-        const custoFinalIons = parseFloat((kwhConsumidos * bookingData.preco_kwh_congelado).toFixed(2));
+        const custoFinalIons = Math.round(kwhConsumidos * bookingData.preco_kwh_congelado);
         const cativoOriginal = bookingData.custo_maximo_cativo;
         
         // FASE 3: Liquidação Interna (Barter)
-        const lucroAnfitriao = parseFloat((custoFinalIons * 0.80).toFixed(2)); // 80% Líquido para o Host
+        const lucroAnfitriao = Math.round(custoFinalIons * 0.80);
 
-        // Operações no Condutor (Debita o real, devolve a sobra libertando o cativo)
         t.update(driverRef, {
             wallet_balance: admin.firestore.FieldValue.increment(-custoFinalIons),
             locked_balance: admin.firestore.FieldValue.increment(-cativoOriginal)
         });
 
-        // Operações no Anfitrião (Credita lucro)
         t.update(hostRef, {
             wallet_balance: admin.firestore.FieldValue.increment(lucroAnfitriao)
         });

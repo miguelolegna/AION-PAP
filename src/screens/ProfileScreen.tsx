@@ -84,16 +84,24 @@ const ProfileScreen = ({ navigation }: any) => {
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Condutor</Text>
-        <MenuOption 
-          icon="history" 
-          label="Histórico de Carregamentos" 
-          onPress={() => navigation.navigate('History', { mode: 'driver' })} // FIX: Agora funcional
-        />
-        <MenuOption 
-          icon="credit-card-outline" 
-          label="Pagamentos" 
-          onPress={() => navigation.navigate('Payments')} // Rota para o novo módulo D4
-        />
+        <TouchableOpacity 
+          style={styles.menuItem} 
+          onPress={() => navigation.navigate('History')}
+        >
+          <Ionicons name="time-outline" size={24} color={Colors.primary} />
+          <Text style={styles.menuLabel}>Histórico de Carregamentos</Text>
+          <Ionicons name="chevron-forward" size={20} color={Colors.gray} />
+        </TouchableOpacity>
+
+        {/* Botão de acesso à Carteira */}
+        <TouchableOpacity 
+          style={styles.menuItem} 
+          onPress={() => navigation.navigate('Payments')}
+        >
+          <Ionicons name="wallet-outline" size={24} color={Colors.primary} />
+          <Text style={styles.menuLabel}>A Minha Carteira (IONS)</Text>
+          <Ionicons name="chevron-forward" size={20} color={Colors.gray} />
+        </TouchableOpacity>
       </View>
 
       <View style={styles.section}>

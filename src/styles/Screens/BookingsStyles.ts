@@ -21,7 +21,7 @@ export const BookingsStyles = StyleSheet.create({
     fontWeight: 'bold',
     color: Colors.dark,
   },
-  // Estilos das Tabs (Novo)
+  // Estilos das Tabs 
   tabBar: {
     flexDirection: 'row',
     marginHorizontal: 20,
@@ -52,7 +52,7 @@ export const BookingsStyles = StyleSheet.create({
   // Estilos do Cartão
   listContent: {
     paddingHorizontal: 20,
-    paddingBottom: 40,
+    paddingBottom: 40, 
   },
   bookingCard: {
     backgroundColor: Colors.white,
@@ -97,7 +97,7 @@ export const BookingsStyles = StyleSheet.create({
     color: Colors.gray,
     marginLeft: 8,
   },
-  // Botões de Ação (Novo)
+  // Botões de Ação
   primaryButton: {
     marginTop: 20,
     padding: 15,

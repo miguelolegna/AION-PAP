@@ -4,7 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as Font from 'expo-font';
 import { FontAwesome6, MaterialIcons, Ionicons } from '@expo/vector-icons';
-import { StripeProvider } from '@stripe/stripe-react-native'; // NOVO IMPORT
+import { StripeProvider } from '@stripe/stripe-react-native';
 
 import AppTabs from './src/navigation/AppTabs';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
@@ -16,10 +16,9 @@ import MyChargersScreen from './src/screens/MyChargersScreen';
 import HistoryScreen from './src/screens/HistoryScreen';
 import ActiveSessionScreen from './src/screens/ActiveSessionScreen'; 
 import CreateBookingScreen from './src/screens/CreateBookingScreen';
+import PaymentsScreen from './src/screens/PaymentsScreen';
 import { Colors } from './src/styles/GlobalStyles';
 import { enableScreens } from 'react-native-screens';
-import PaymentsScreen from './src/screens/PaymentsScreen';
-
 
 enableScreens(); 
 
@@ -81,9 +80,11 @@ const AppNavigator = () => (
         options={{ headerShown: true, title: 'Histórico', headerTintColor: Colors.primary }} 
       />
 
+      {/* CORREÇÃO: Injeção do cabeçalho de navegação para evitar deadlock */}
       <Stack.Screen 
-      name="Payments" 
-      component={PaymentsScreen} 
+        name="Payments" 
+        component={PaymentsScreen} 
+        options={{ headerShown: true, title: 'Carteira de IONS', headerTintColor: Colors.primary }} 
       />
     </Stack.Navigator>
   </NavigationContainer>
@@ -142,12 +143,18 @@ const RootLayout = () => {
 // APP ENTRY POINT (PROVIDERS)
 // ============================================================================
 
+// CORREÇÃO: Validação de presença obrigatória da chave da Stripe
+const stripeKey = process.env.EXPO_PUBLIC_STRIPE_API_KEY;
+if (!stripeKey) {
+  console.error("FALHA CRÍTICA: EXPO_PUBLIC_STRIPE_API_KEY não está definida no ficheiro .env");
+}
+
 export default function App() {
   return (
     <AuthProvider>
       <StripeProvider
-        publishableKey={process.env.EXPO_PUBLIC_STRIPE_API_KEY || ""}
-        merchantIdentifier="merchant.com.aktie.pap" // Identificador para Apple/Google Pay
+        publishableKey={stripeKey || "CHAVE_AUSENTE"}
+        merchantIdentifier="merchant.com.aktie.pap"
       >
         <RootLayout />
       </StripeProvider>

@@ -1,25 +1,27 @@
 // src/screens/ActiveSessionScreen.tsx
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Alert, StyleSheet, StatusBar, ActivityIndicator } from 'react-native';
-import { doc, onSnapshot, updateDoc, Timestamp } from 'firebase/firestore';
-import { db } from '../config/firebaseConfig';
-import { Colors } from '../styles/GlobalStyles';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { View, Text, TouchableOpacity, Alert, StatusBar, ActivityIndicator, TextInput, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { httpsCallable } from 'firebase/functions';
+import { db, functions } from '../config/firebaseConfig';
+import { ActiveSessionStyles as styles } from '../styles/Screens/ActiveSessionStyles';
+import { Colors, GlobalStyles } from '../styles/GlobalStyles';
+import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 
 const ActiveSessionScreen = ({ route, navigation }: any) => {
   const { bookingId } = route.params;
+  
   const [booking, setBooking] = useState<any>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [completing, setCompleting] = useState(false);
+  const [kwhInput, setKwhInput] = useState('');
 
-  // 1. Listener em Tempo Real
   useEffect(() => {
     const unsub = onSnapshot(doc(db, "bookings", bookingId), (snap) => {
       if (snap.exists()) {
         const data = snap.data();
         setBooking({ id: snap.id, ...data });
         
-        // Se a sessão já foi completada por outra via, sai deste ecrã
         if (data.status === 'completed' || data.status === 'cancelled') {
           navigation.navigate('MainTabs', { screen: 'Reservas' });
         }
@@ -31,7 +33,6 @@ const ActiveSessionScreen = ({ route, navigation }: any) => {
     return () => unsub();
   }, [bookingId]);
 
-  // 2. Cronómetro de Frontend (Cosmético para a UI)
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (booking?.status === 'active') {
@@ -42,105 +43,112 @@ const ActiveSessionScreen = ({ route, navigation }: any) => {
     return () => clearInterval(interval);
   }, [booking?.status]);
 
-  // 3. Cálculos Dinâmicos (UI)
-  // Nota: Isto é apenas estimativa visual. O cálculo real de cobrança deve ser feito no backend.
-  const minutes = elapsedSeconds / 60;
-  const currentKwhRaw = booking ? (booking.charger_potencia * (minutes / 60)) : 0;
-  const currentCostRaw = booking ? (currentKwhRaw * booking.charger_price) : 0;
+  const handleEndSession = async () => {
+    const kwh = parseFloat(kwhInput.replace(',', '.'));
+    
+    if (isNaN(kwh) || kwh <= 0) {
+      return Alert.alert("Aviso", "Insere a quantidade de kWh consumida registada no posto ou no carro.");
+    }
 
-  const currentKwhFormatted = currentKwhRaw.toFixed(2);
-  const currentCostFormatted = currentCostRaw.toFixed(2);
-
-  const confirmEndSession = () => {
     Alert.alert(
-      "Terminar Carregamento",
-      `Desejas encerrar a sessão agora?\nConsumo estimado: ${currentKwhFormatted} kWh\nCusto estimado: ${currentCostFormatted}€`,
+      "Confirmar Liquidação",
+      `Declaras que consumiste ${kwh} kWh? O capital correspondente será liquidado e a caução sobrante devolvida.`,
       [
-        { text: "Voltar", style: "cancel" },
-        { text: "Sim, Finalizar", style: "destructive", onPress: () => handleEndSession() }
+        { text: "Cancelar", style: "cancel" },
+        { 
+          text: "Confirmar", 
+          style: "destructive", 
+          onPress: async () => {
+            setCompleting(true);
+            try {
+              const finalizarSessao = httpsCallable(functions, 'finalizarSessaoCarregamento');
+              await finalizarSessao({
+                bookingId: bookingId,
+                kwhConsumidos: kwh
+              });
+            } catch (e: any) {
+              console.error("Erro Técnico EndSession:", e);
+              Alert.alert("Erro de Transação", e.message || "Falha crítica ao comunicar com a Cloud Function de liquidação.");
+              setCompleting(false);
+            }
+          } 
+        }
       ]
     );
   };
 
-  const handleEndSession = async () => {
-    setCompleting(true);
-    try {
-      // FIX DO ERRO TÉCNICO: Garante que estamos a enviar NÚMEROS e não Strings para o Firestore.
-      // Firestore odeia NaN ou tipos incorretos.
-      const finalPrice = parseFloat(parseFloat(currentCostFormatted).toFixed(2));
-      const finalKwh = parseFloat(parseFloat(currentKwhFormatted).toFixed(2));
-
-      await updateDoc(doc(db, "bookings", bookingId), {
-        status: 'completed',
-        end_time: Timestamp.now(),
-        final_price: finalPrice, // Número
-        final_kwh: finalKwh // Número
-      });
-
-      // navigation.navigate é tratado pelo listener do useEffect (1)
-    } catch (e) {
-      console.error("Erro Técnico EndSession:", e);
-      Alert.alert("ERRO TÉCNICO", "Falha crítica ao comunicar com a base de dados ao encerrar.");
-      setCompleting(false);
-    }
-  };
-
   if (!booking || completing) return (
-    <View style={[styles.container, styles.whiteTheme]}>
+    <View style={[GlobalStyles.container, styles.loadingContainer]}>
       <ActivityIndicator size="large" color={Colors.primary} />
-      {completing && <Text style={{ marginTop: 15, color: Colors.dark }}>A processar pagamento...</Text>}
+      {completing && <Text style={styles.loadingText}>A processar liquidação interna...</Text>}
     </View>
   );
 
   return (
-    <View style={[styles.container, styles.whiteTheme]}>
-      <StatusBar barStyle="dark-content" backgroundColor={Colors.background} />
-      
-      <View style={styles.header}>
-        <MaterialCommunityIcons name="lightning-bolt" size={32} color={Colors.primary} />
-        <Text style={styles.headerTitle}>Sessão Ativa</Text>
-      </View>
+    <KeyboardAvoidingView style={GlobalStyles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+        <View style={[GlobalStyles.container, styles.innerContainer]}>
+          <StatusBar barStyle="dark-content" backgroundColor={Colors.background} />
+          
+          <View style={styles.headerRow}>
+            <MaterialCommunityIcons name="lightning-bolt" size={32} color={Colors.primary} />
+            <Text style={styles.headerTitle}>Sessão Ativa</Text>
+          </View>
 
-      <Text style={styles.timer}>
-        {Math.floor(elapsedSeconds / 3600).toString().padStart(2, '0')}:
-        {Math.floor((elapsedSeconds % 3600) / 60).toString().padStart(2, '0')}:
-        {(elapsedSeconds % 60).toString().padStart(2, '0')}
-      </Text>
+          <View style={styles.timerContainer}>
+            <Text style={styles.timerText}>
+              {Math.floor(elapsedSeconds / 3600).toString().padStart(2, '0')}:
+              {Math.floor((elapsedSeconds % 3600) / 60).toString().padStart(2, '0')}:
+              {(elapsedSeconds % 60).toString().padStart(2, '0')}
+            </Text>
+            <Text style={styles.timerLabel}>Tempo de ligação</Text>
+          </View>
 
-      <View style={styles.metricsContainer}>
-        <Text style={styles.costText}>{currentCostFormatted} €</Text>
-        <Text style={styles.kwhText}>{currentKwhFormatted} kWh consumidos</Text>
-      </View>
+          <View style={[GlobalStyles.cardItem, styles.cardItemMargin]}>
+            <View style={styles.cardRow}>
+              <Ionicons name="lock-closed-outline" size={20} color={Colors.warning} />
+              <Text style={styles.cardLabel}>Capital Cativo (Segurança)</Text>
+            </View>
+            <Text style={styles.cardValueDark}>{booking.custo_maximo_cativo} IONS</Text>
+            
+            <View style={styles.divider} />
+            
+            <View style={styles.cardRow}>
+              <Ionicons name="flash-outline" size={20} color={Colors.primary} />
+              <Text style={styles.cardLabel}>Tarifa Congelada</Text>
+            </View>
+            <Text style={styles.cardValuePrimary}>{booking.preco_kwh_congelado} IONS/kWh</Text>
+          </View>
 
-      <View style={styles.infoCard}>
-        <Text style={styles.infoAddress} numberOfLines={1}>{booking.charger_address}</Text>
-        <Text style={styles.infoSub}>Potência: {booking.charger_potencia} kW • {booking.charger_price} €/kWh</Text>
-      </View>
+          <View style={styles.inputSection}>
+            <Text style={styles.inputTitle}>Consumo Declarado</Text>
+            <Text style={styles.inputDescription}>
+              Para finalizar, verifica o contador do carro ou do posto e insere os kWh consumidos.
+            </Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Ex: 15.2"
+              keyboardType="numeric"
+              value={kwhInput}
+              onChangeText={setKwhInput}
+              editable={!completing}
+            />
+          </View>
 
-      <TouchableOpacity 
-        onPress={confirmEndSession}
-        style={[styles.endButton, { backgroundColor: Colors.danger }]}
-      >
-        <Text style={styles.endButtonText}>FINALIZAR CARREGAMENTO</Text>
-      </TouchableOpacity>
-    </View>
+          <TouchableOpacity 
+            onPress={handleEndSession}
+            style={styles.endButton}
+            disabled={completing}
+          >
+            <Text style={styles.endButtonText}>
+              LIQUIDAR SESSÃO P2P
+            </Text>
+          </TouchableOpacity>
+
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 25, justifyContent: 'space-between', alignItems: 'center' },
-  whiteTheme: { backgroundColor: Colors.background },
-  header: { flexDirection: 'row', alignItems: 'center', marginTop: 10 },
-  headerTitle: { fontSize: 18, fontWeight: 'bold', color: Colors.dark, marginLeft: 10 },
-  timer: { fontSize: 64, fontWeight: 'bold', color: Colors.dark, fontVariant: ['tabular-nums'], marginTop: 30 },
-  metricsContainer: { alignItems: 'center', marginVertical: 20 },
-  costText: { fontSize: 52, fontWeight: 'bold', color: Colors.primary },
-  kwhText: { fontSize: 16, color: Colors.gray, marginTop: 5, fontWeight: '500' },
-  infoCard: { width: '100%', backgroundColor: Colors.white, padding: 20, borderRadius: 15, elevation: 2, borderWidth: 1, borderColor: Colors.border },
-  infoAddress: { fontSize: 14, fontWeight: 'bold', color: Colors.dark, textAlign: 'center' },
-  infoSub: { fontSize: 12, color: Colors.gray, marginTop: 4, textAlign: 'center' },
-  endButton: { width: '100%', padding: 18, borderRadius: 15, alignItems: 'center', elevation: 4 },
-  endButtonText: { color: 'white', fontWeight: 'bold', fontSize: 16, letterSpacing: 0.8 }
-});
 
 export default ActiveSessionScreen;

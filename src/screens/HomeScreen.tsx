@@ -1,15 +1,6 @@
 // src/screens/HomeScreen.tsx
 import React, { useEffect, useState } from 'react';
-import { 
-  View, 
-  Text, 
-  ActivityIndicator, 
-  FlatList, 
-  TouchableOpacity, 
-  SafeAreaView, 
-  StatusBar,
-  Alert
-} from 'react-native';
+import {View,Text, ActivityIndicator, FlatList, TouchableOpacity, SafeAreaView, StatusBar, Alert} from 'react-native';
 import { collection, onSnapshot, query, where, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../config/firebaseConfig';
 import { useAuth } from '../context/AuthContext';
@@ -124,7 +115,7 @@ const HomeScreen: React.FC = () => {
         </Text>
         
         <Text style={styles.headerSubtitle}>
-          {chargers.length} postos disponíveis na Aktie
+          {chargers.length} postos disponíveis na AION
         </Text>
         
         {!user && (

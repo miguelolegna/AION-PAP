@@ -2,14 +2,17 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, ActivityIndicator, SafeAreaView, TouchableOpacity, Alert, StatusBar } from 'react-native';
 import { collection, query, where, onSnapshot, orderBy, getDocs } from 'firebase/firestore'; 
-import { db } from '../config/firebaseConfig';
+import { httpsCallable } from 'firebase/functions';
+import { db, functions } from '../config/firebaseConfig';
 import { useAuth } from '../context/AuthContext';
 import { Colors, GlobalStyles } from '../styles/GlobalStyles';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { BookingsStyles as styles } from '../styles/Screens/BookingsStyles';
+import { Ionicons } from '@expo/vector-icons';
 
 const BookingsScreen = ({ navigation }: any) => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [processingId, setProcessingId] = useState<string | null>(null);
   const [bookings, setBookings] = useState<any[]>([]);
 
   useEffect(() => {
@@ -38,10 +41,9 @@ const BookingsScreen = ({ navigation }: any) => {
 
   const handleStartCharging = async (bookingId: string) => {
     if (!user) return;
-    setLoading(true);
+    setProcessingId(bookingId);
 
     try {
-      // Regra de Concorrência: Bloquear se já existir uma sessão ativa
       const concurrencyQuery = query(
         collection(db, "bookings"),
         where("user_uid", "==", user.uid),
@@ -51,78 +53,103 @@ const BookingsScreen = ({ navigation }: any) => {
       const activeSessionsSnap = await getDocs(concurrencyQuery);
 
       if (!activeSessionsSnap.empty) {
-        setLoading(false);
+        setProcessingId(null);
         Alert.alert("AÇÃO BLOQUEADA", "Já tens um carregamento em curso noutro posto.");
         return;
       }
 
-      // Delegação Financeira: O frontend não altera a base de dados. Delega para a PaymentsScreen.
-      Alert.alert(
-        "Autorizar Pagamento",
-        "É necessário reter os fundos antes de iniciar a sessão.",
-        [
-          { text: "Cancelar", style: "cancel", onPress: () => setLoading(false) },
-          { 
-            text: "Proceder", 
-            onPress: () => {
-              setLoading(false);
-              navigation.navigate('Payments', { bookingId: bookingId, duracao: 2 });
-            }
-          }
-        ]
-      );
+      // CORREÇÃO CRÍTICA: Invocação direta da Cloud Function
+      // É o backend que avalia os 5000 IONS vs o custo da reserva.
+      const iniciarSessao = httpsCallable(functions, 'iniciarSessaoCarregamento');
+      
+      // Assumindo a duração original (se houver) ou fallback de 2 horas se os dados estiverem corrompidos
+      const duracaoHoras = 2; 
 
-    } catch (error: any) {
-      setLoading(false);
-      Alert.alert("ERRO TÉCNICO", "Falha ao verificar a integridade da sessão.");
+      await iniciarSessao({
+        bookingId: bookingId,
+        duracaoHoras: duracaoHoras
+      });
+
+      // Sucesso Silencioso: A Cloud Function bloqueou os fundos e mudou o status para 'active'.
+      // O listener do Firestore fará a UI atualizar o botão para "VER SESSÃO ATIVA".
+
+    } catch (functionError: any) {
+      console.error("Erro da Cloud Function:", functionError);
+      
+      if (functionError?.code === 'functions/resource-exhausted' || functionError?.message?.includes('insuficiente')) {
+        Alert.alert(
+          "Saldo Insuficiente",
+          "Não tens IONS suficientes na carteira para cobrir a caução de segurança.",
+          [
+            { text: "Cancelar", style: "cancel" },
+            { text: "Carregar IONS", onPress: () => navigation.navigate('Payments') }
+          ]
+        );
+      } else {
+        Alert.alert("ERRO TÉCNICO", functionError.message || "Falha ao verificar a integridade da sessão no servidor.");
+      }
+    } finally {
+      setProcessingId(null);
     }
   };
 
   const renderItem = ({ item }: any) => {
     const isAccepted = item.status === 'accepted';
     const isActive = item.status === 'active';
+    const isProcessing = processingId === item.id;
 
     return (
-      <View style={GlobalStyles.cardItem}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-          <Text style={{ fontSize: 16, fontWeight: 'bold', color: Colors.dark, flex: 1 }} numberOfLines={1}>{item.charger_address}</Text>
-          <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, backgroundColor: item.status === 'active' ? Colors.primary : Colors.primaryLight }}>
-            <Text style={{ fontSize: 10, fontWeight: 'bold', color: item.status === 'active' ? Colors.white : Colors.primary }}>
+      <View style={styles.bookingCard}>
+        <View style={styles.headerRow}>
+          <Text style={styles.address} numberOfLines={1}>
+            {/* Fallback de UI visto que a morada foi retirada da reserva */}
+            {item.charger_id ? `Posto ${item.charger_id.substring(0, 6)}` : "Posto Desconhecido"}
+          </Text>
+          <View style={[styles.statusBadge, { backgroundColor: isActive ? Colors.primary : Colors.primaryLight }]}>
+            <Text style={[styles.statusText, { color: isActive ? Colors.white : Colors.primary }]}>
               {item.status.toUpperCase()}
             </Text>
           </View>
         </View>
 
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
+        <View style={styles.detailsRow}>
           <Ionicons name="time-outline" size={16} color={Colors.gray} />
-          <Text style={{ fontSize: 14, color: Colors.gray, marginLeft: 8 }}>{item.start_time?.toDate().toLocaleString('pt-PT')}</Text>
+          <Text style={styles.detailsText}>{item.start_time?.toDate().toLocaleString('pt-PT')}</Text>
         </View>
 
         {isAccepted && (
           <TouchableOpacity 
-            style={{ backgroundColor: Colors.primary, marginTop: 20, padding: 15, borderRadius: 12, alignItems: 'center' }}
+            style={[styles.primaryButton, { backgroundColor: Colors.primary }]}
             onPress={() => handleStartCharging(item.id)}
+            disabled={isProcessing}
           >
-            <Text style={{ color: Colors.white, fontWeight: 'bold' }}>AUTORIZAR PAGAMENTO</Text>
+            {isProcessing ? (
+               <ActivityIndicator color={Colors.white} />
+            ) : (
+               <>
+                 <Ionicons name="flash" size={18} color={Colors.white} />
+                 <Text style={styles.buttonText}>AUTORIZAR E INICIAR</Text>
+               </>
+            )}
           </TouchableOpacity>
         )}
 
         {isActive && (
           <TouchableOpacity 
-            style={{ marginTop: 15, borderWidth: 1.5, borderColor: Colors.primary, padding: 12, borderRadius: 10, alignItems: 'center' }}
+            style={[styles.primaryButton, { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: Colors.primary }]}
             onPress={() => navigation.navigate('ActiveSession', { bookingId: item.id })}
           >
-            <Text style={{ color: Colors.primary, fontWeight: 'bold' }}>VER SESSÃO ATIVA</Text>
+            <Text style={[styles.buttonText, { color: Colors.primary }]}>VER SESSÃO ATIVA</Text>
           </TouchableOpacity>
         )}
       </View>
     );
   };
 
-  if (loading) return <View style={{flex:1, justifyContent:'center'}}><ActivityIndicator size="large" color={Colors.primary} /></View>;
+  if (loading) return <View style={styles.loadingContainer}><ActivityIndicator size="large" color={Colors.primary} /></View>;
 
   return (
-    <SafeAreaView style={GlobalStyles.container}>
+    <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
       
       <View style={GlobalStyles.headerCard}>
@@ -141,8 +168,13 @@ const BookingsScreen = ({ navigation }: any) => {
         data={bookings}
         keyExtractor={item => item.id}
         renderItem={renderItem}
-        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 20 }}
-        ListEmptyComponent={<Text style={{ textAlign: 'center', marginTop: 40, color: Colors.gray }}>Não tens nenhum carregamento planeado.</Text>}
+        // Correção de UI: Margem inferior aplicada aqui
+        contentContainerStyle={[styles.listContent, { paddingBottom: 100 }]} 
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>Não tens nenhum carregamento planeado.</Text>
+          </View>
+        }
       />
     </SafeAreaView>
   );

@@ -1,4 +1,3 @@
-// src/services/ChargerService.ts
 import { addDoc, collection, Timestamp, serverTimestamp, doc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../config/firebaseConfig';
@@ -22,16 +21,11 @@ export interface ChargerFormData {
 
 export interface BookingData {
   charger_id: string;
-  charger_address: string;
   user_uid: string;
   owner_uid: string;
   start_time: Date;
   end_time: Date;
-  estimated_kwh: number;
-  total_price: number;
-  status: 'pending' | 'accepted' | 'rejected' | 'cancelled' | 'completed';
-  payment_status: string;
-  charger_is_deleted: boolean;
+  status: 'pending' | 'accepted' | 'active' | 'completed' | 'cancelled';
 }
 
 // ==========================================
@@ -148,16 +142,11 @@ export const createBooking = async (data: BookingData) => {
   try {
     const docRef = await addDoc(collection(db, "bookings"), {
       charger_id: data.charger_id,
-      charger_address: data.charger_address,
       user_uid: data.user_uid,
       owner_uid: data.owner_uid,
       start_time: Timestamp.fromDate(data.start_time),
       end_time: Timestamp.fromDate(data.end_time),
-      estimated_kwh: data.estimated_kwh,
-      total_price: data.total_price,
       status: data.status, 
-      payment_status: data.payment_status,
-      charger_is_deleted: data.charger_is_deleted,
       created_at: serverTimestamp()
     });
 
