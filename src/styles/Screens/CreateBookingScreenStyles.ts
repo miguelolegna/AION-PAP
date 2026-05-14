@@ -9,10 +9,6 @@ export const CreateBookingScreenStyles = StyleSheet.create({
   content: {
     padding: Metrics.padding,
   },
-  closeButton: {
-    alignSelf: 'flex-end',
-    marginBottom: 5,
-  },
   stationCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -48,57 +44,6 @@ export const CreateBookingScreenStyles = StyleSheet.create({
     color: Colors.dark,
     marginBottom: 15,
   },
-  rowBetween: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 25,
-  },
-  pickerWrapper: {
-    backgroundColor: '#F8F9FA',
-    borderRadius: 20,
-    padding: 15,
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E9ECEF',
-  },
-  pickerText: {
-    marginLeft: 10,
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: Colors.dark,
-  },
-  durationMainPicker: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    borderWidth: 2,
-    borderColor: Colors.primaryLight,
-    backgroundColor: Colors.white,
-    marginBottom: 15,
-  },
-  durationMainText: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: Colors.primary,
-  },
-  durationRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 30,
-  },
-  durationBtn: {
-    paddingVertical: 12,
-    borderRadius: 15,
-    width: '22%',
-    alignItems: 'center',
-    backgroundColor: '#F1F3F5',
-    ...GlobalStyles.shadow,
-  },
-  durationText: {
-    fontWeight: 'bold',
-  },
   summaryCard: {
     backgroundColor: Colors.dark,
     padding: 25,
@@ -114,23 +59,60 @@ export const CreateBookingScreenStyles = StyleSheet.create({
   },
   summaryRow: {
     flexDirection: 'row',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
-    alignItems: 'flex-end',
     marginTop: 10,
+    marginBottom: 15,
+  },
+  summaryColumnLeft: {
+    flex: 1,
+  },
+  summaryColumnRight: {
+    flex: 1,
+    alignItems: 'flex-end',
   },
   summaryText: {
     color: Colors.white,
     fontSize: 14,
     marginBottom: 2,
   },
+  summaryBasePriceLabel: {
+    fontSize: 13,
+    color: Colors.gray,
+    marginBottom: 2,
+  },
   totalPrice: {
     color: Colors.primary,
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
   },
-  moduleBadge: {
-    color: '#AAA',
-    fontSize: 10,
+  smartLockContainer: {
+    backgroundColor: 'rgba(245, 124, 0, 0.1)',
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(245, 124, 0, 0.3)',
+  },
+  smartLockHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  smartLockTitle: {
+    color: '#E65100',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  smartLockValue: {
+    color: '#E65100',
+    fontWeight: '900',
+    fontSize: 16,
+  },
+  smartLockDesc: {
+    color: '#E65100',
+    fontSize: 11,
+    lineHeight: 16,
   },
   confirmBtn: {
     backgroundColor: Colors.primary,
@@ -142,10 +124,12 @@ export const CreateBookingScreenStyles = StyleSheet.create({
     justifyContent: 'center',
     ...GlobalStyles.shadow,
   },
+  confirmBtnDisabled: {
+    opacity: 0.7,
+  },
   confirmBtnText: {
     color: Colors.white,
     fontWeight: 'bold',
     fontSize: 16,
-    marginRight: 10,
   },
 });

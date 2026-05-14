@@ -1,7 +1,5 @@
-import { StyleSheet, Dimensions } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { Colors, Metrics, GlobalStyles } from '../GlobalStyles';
-
-const { width } = Dimensions.get('window');
 
 export const MyChargersStyles = StyleSheet.create({
   container: {
@@ -9,15 +7,14 @@ export const MyChargersStyles = StyleSheet.create({
   },
   listContent: {
     padding: Metrics.padding,
-    paddingBottom: 60, // Espaço extra para não bater na tab bar
+    paddingBottom: 60,
   },
-  // Cartão com design de dashboard
   card: {
     backgroundColor: Colors.white,
-    borderRadius: 24, // Bordas mais arredondadas para um look moderno
+    borderRadius: 24,
     marginBottom: 20,
     flexDirection: 'row',
-    height: 120, // Altura fixa para consistência
+    height: 120,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: 'rgba(0,0,0,0.05)',
@@ -29,7 +26,6 @@ export const MyChargersStyles = StyleSheet.create({
     height: '100%',
     backgroundColor: Colors.primaryLight,
   },
-  // Badge estilo "Pill"
   statusBadge: {
     position: 'absolute',
     top: 10,
@@ -66,7 +62,6 @@ export const MyChargersStyles = StyleSheet.create({
     fontWeight: '600',
     marginLeft: 8,
   },
-  // Coluna de ações com fundo subtil para separação
   actionsContainer: {
     flexDirection: 'column',
     backgroundColor: '#F8F9FA',
@@ -83,7 +78,6 @@ export const MyChargersStyles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: Colors.border,
   },
-  // Empty State visualmente apelativo
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -98,5 +92,21 @@ export const MyChargersStyles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 20,
     lineHeight: 24,
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 30,
+    right: 30,
+    backgroundColor: Colors.primary,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
   },
 });

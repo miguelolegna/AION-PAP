@@ -1,0 +1,36 @@
+{
+  "deltas": {
+    "tempo": {
+      "vazio": -0.15,
+      "fora_vazio": 0.05
+    },
+    "macro": {
+      "zonas": {
+        "alta_densidade": ["Lisboa", "Porto", "Cascais", "Funchal"],
+        "media_densidade": ["Braga", "Aveiro", "Coimbra", "Setúbal", "Viseu"],
+        "baixa_densidade": ["Castelo Branco", "Guarda", "Beja", "Évora", "Fundão", "Portalegre"]
+      },
+      "valores": {
+        "alta_densidade": 0.20,
+        "media_densidade": 0.05,
+        "baixa_densidade": -0.05,
+        "default": 0.00
+      }
+    },
+    "micro": {
+      "alta_ocupacao": 0.10,
+      "baixa_ocupacao": -0.10
+    },
+    "tier": {
+      "nivel_1": { "max_kw": 3.7, "multiplicador": -0.10, "floor": 15, "ceil": 35 },
+      "nivel_2": { "max_kw": 22, "multiplicador": 0.00, "floor": 25, "ceil": 60 },
+      "nivel_3": { "max_kw": 999, "multiplicador": 0.25, "floor": 45, "ceil": 95 }
+    }
+  },
+  "metadata": {
+    "version": "1.0.0",
+    "currency": "IONS",
+    "conversion_rate": 0.01,
+    "last_update": "2026-05-14T10:14:00Z"
+  }
+}

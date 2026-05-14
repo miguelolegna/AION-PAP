@@ -9,19 +9,22 @@ import { Colors } from '../styles/GlobalStyles';
 const ProfileScreen = ({ navigation }: any) => {
   const { user, logout } = useAuth();
 
-  const MenuOption = ({ icon, label, onPress, color = Colors.dark }: any) => (
-    <TouchableOpacity style={styles.menuItem} onPress={onPress}>
-      <View style={styles.menuItemLeft}>
-        <View style={[styles.iconContainer, { backgroundColor: color + '15' }]}>
-          <MaterialCommunityIcons name={icon} size={22} color={color} />
+  // Uniformização estrita para Preto/Cinzento (Colors.dark), mantendo a exceção de perigo
+  const MenuOption = ({ icon, label, onPress, isDanger = false }: any) => {
+    const iconColor = isDanger ? Colors.danger : Colors.primary;
+    return (
+      <TouchableOpacity style={styles.menuItem} onPress={onPress}>
+        <View style={styles.menuItemLeft}>
+          <View style={[styles.iconContainer, { backgroundColor: iconColor + '15' }]}>
+            <MaterialCommunityIcons name={icon} size={22} color={iconColor} />
+          </View>
+          <Text style={styles.menuLabel}>{label}</Text>
         </View>
-        <Text style={styles.menuLabel}>{label}</Text>
-      </View>
-      <Ionicons name="chevron-forward" size={18} color={Colors.gray} />
-    </TouchableOpacity>
-  );
+        <Ionicons name="chevron-forward" size={18} color={Colors.gray} />
+      </TouchableOpacity>
+    );
+  };
 
-  // VIEW PARA UTILIZADORES NÃO AUTENTICADOS
   if (!user) {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center', padding: 20 }]}>
@@ -42,7 +45,7 @@ const ProfileScreen = ({ navigation }: any) => {
 
         <TouchableOpacity 
           style={{ marginTop: 20 }}
-          onPress={() => navigation.navigate('Auth', { screen: 'Register' })} // Ajusta se o nome for diferente
+          onPress={() => navigation.navigate('Auth', { screen: 'Register' })}
         >
           <Text style={{ color: Colors.primary, fontWeight: 'bold' }}>Não tem conta? Crie agora</Text>
         </TouchableOpacity>
@@ -50,7 +53,6 @@ const ProfileScreen = ({ navigation }: any) => {
     );
   }
 
-  // VIEW PARA UTILIZADORES LOGADOS
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
@@ -69,50 +71,20 @@ const ProfileScreen = ({ navigation }: any) => {
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Anfitrião</Text>
-        <MenuOption 
-          icon="ev-station" 
-          label="Meus Carregadores" 
-          color={Colors.primary}
-          onPress={() => navigation.navigate('MyChargers')} 
-        />
-        <MenuOption 
-          icon="calendar-clock" 
-          label="Histórico de Ganhos" 
-          onPress={() => navigation.navigate('History', { mode: 'host' })} // FIX: Adicionado mode
-        />
+        <MenuOption icon="ev-station" label="Meus Carregadores" onPress={() => navigation.navigate('MyChargers')} />
+        <MenuOption icon="calendar-clock" label="Histórico de Ganhos" onPress={() => navigation.navigate('History', { mode: 'host' })} />
       </View>
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Condutor</Text>
-        <TouchableOpacity 
-          style={styles.menuItem} 
-          onPress={() => navigation.navigate('History')}
-        >
-          <Ionicons name="time-outline" size={24} color={Colors.primary} />
-          <Text style={styles.menuLabel}>Histórico de Carregamentos</Text>
-          <Ionicons name="chevron-forward" size={20} color={Colors.gray} />
-        </TouchableOpacity>
-
-        {/* Botão de acesso à Carteira */}
-        <TouchableOpacity 
-          style={styles.menuItem} 
-          onPress={() => navigation.navigate('Payments')}
-        >
-          <Ionicons name="wallet-outline" size={24} color={Colors.primary} />
-          <Text style={styles.menuLabel}>A Minha Carteira (IONS)</Text>
-          <Ionicons name="chevron-forward" size={20} color={Colors.gray} />
-        </TouchableOpacity>
+        <MenuOption icon="history" label="Histórico de Carregamentos" onPress={() => navigation.navigate('History')} />
+        <MenuOption icon="wallet-outline" label="A Minha Carteira (IONS)" onPress={() => navigation.navigate('Payments')} />
       </View>
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Apoio</Text>
         <MenuOption icon="cog-outline" label="Configurações" onPress={() => {}} />
-        <MenuOption 
-          icon="logout" 
-          label="Sair da Conta" 
-          color={Colors.danger} 
-          onPress={logout} 
-        />
+        <MenuOption icon="logout" label="Sair da Conta" isDanger={true} onPress={logout} />
       </View>
     </ScrollView>
   );

@@ -8,6 +8,7 @@ import { StripeProvider } from '@stripe/stripe-react-native';
 
 import AppTabs from './src/navigation/AppTabs';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
+import { ConfigProvider, usePricingConfig } from './src/context/ConfigContext'; // Importação obrigatória
 import AuthScreen from './src/screens/AuthScreen';
 import SmartSplashScreen from './src/screens/SplashScreen';
 import AddChargerScreen from './src/screens/AddChargerScreen'; 
@@ -34,58 +35,14 @@ const AppNavigator = () => (
   <NavigationContainer>
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="MainTabs" component={AppTabs} />
-      
-      <Stack.Screen 
-        name="Auth" 
-        component={AuthScreen} 
-        options={{ presentation: 'modal' }} 
-      />
-
-      <Stack.Screen 
-        name="ActiveSession" 
-        component={ActiveSessionScreen} 
-        options={{ 
-          gestureEnabled: false,
-          headerShown: false 
-        }} 
-      />
-
-      <Stack.Screen 
-        name="ChargerDetails" 
-        component={ChargerDetailsScreen} 
-        options={{ headerShown: true, title: 'Detalhes', headerTintColor: Colors.primary }} 
-      />
-
-      <Stack.Screen 
-        name="AddCharger" 
-        component={AddChargerScreen} 
-        options={{ headerShown: true, title: 'Registar Posto', headerTintColor: Colors.primary }} 
-      />
-
-      <Stack.Screen 
-        name="CreateBooking" 
-        component={CreateBookingScreen} 
-        options={{ headerShown: true, title: 'Agendar Carregamento', headerTintColor: Colors.primary }} 
-      />
-
-      <Stack.Screen 
-        name="MyChargers" 
-        component={MyChargersScreen} 
-        options={{ headerShown: true, title: 'Os Meus Postos', headerTintColor: Colors.primary }} 
-      />
-
-      <Stack.Screen 
-        name="History" 
-        component={HistoryScreen} 
-        options={{ headerShown: true, title: 'Histórico', headerTintColor: Colors.primary }} 
-      />
-
-      {/* CORREÇÃO: Injeção do cabeçalho de navegação para evitar deadlock */}
-      <Stack.Screen 
-        name="Payments" 
-        component={PaymentsScreen} 
-        options={{ headerShown: true, title: 'Carteira de IONS', headerTintColor: Colors.primary }} 
-      />
+      <Stack.Screen name="Auth" component={AuthScreen} options={{ presentation: 'modal' }} />
+      <Stack.Screen name="ActiveSession" component={ActiveSessionScreen} options={{ gestureEnabled: false }} />
+      <Stack.Screen name="ChargerDetails" component={ChargerDetailsScreen} options={{ headerShown: true, title: 'Detalhes', headerTintColor: Colors.primary }} />
+      <Stack.Screen name="AddCharger" component={AddChargerScreen} options={{ headerShown: true, title: 'Registar Posto', headerTintColor: Colors.primary }} />
+      <Stack.Screen name="CreateBooking" component={CreateBookingScreen} options={{ headerShown: true, title: 'Agendar Carregamento', headerTintColor: Colors.primary }} />
+      <Stack.Screen name="MyChargers" component={MyChargersScreen} options={{ headerShown: true, title: 'Os Meus Postos', headerTintColor: Colors.primary }} />
+      <Stack.Screen name="History" component={HistoryScreen} options={{ headerShown: true, title: 'Histórico', headerTintColor: Colors.primary }} />
+      <Stack.Screen name="Payments" component={PaymentsScreen} options={{ headerShown: true, title: 'Carteira de IONS', headerTintColor: Colors.primary }} />
     </Stack.Navigator>
   </NavigationContainer>
 );
@@ -96,6 +53,7 @@ const AppNavigator = () => (
 
 const RootLayout = () => {
   const { loading: authLoading } = useAuth();
+  const { loading: configLoading } = usePricingConfig(); // Sincronização com o motor de preços
   const [fontsLoaded, setFontsLoaded] = useState(false);
   const [isSplashVisible, setSplashVisible] = useState(true);
   const [mountNavigator, setMountNavigator] = useState(false);
@@ -122,7 +80,8 @@ const RootLayout = () => {
     prepare();
   }, []);
 
-  const isAppReady = fontsLoaded && !authLoading;
+  // O Splash Screen só deve permitir a saída quando Fontes, Auth E Configurações estiverem prontas.
+  const isAppReady = fontsLoaded && !authLoading && !configLoading;
 
   return (
     <View style={{ flex: 1, backgroundColor: '#FFF' }}>
@@ -143,21 +102,22 @@ const RootLayout = () => {
 // APP ENTRY POINT (PROVIDERS)
 // ============================================================================
 
-// CORREÇÃO: Validação de presença obrigatória da chave da Stripe
 const stripeKey = process.env.EXPO_PUBLIC_STRIPE_API_KEY;
 if (!stripeKey) {
-  console.error("FALHA CRÍTICA: EXPO_PUBLIC_STRIPE_API_KEY não está definida no ficheiro .env");
+  console.error("FALHA CRÍTICA: EXPO_PUBLIC_STRIPE_API_KEY ausente.");
 }
 
 export default function App() {
   return (
     <AuthProvider>
-      <StripeProvider
-        publishableKey={stripeKey || "CHAVE_AUSENTE"}
-        merchantIdentifier="merchant.com.aktie.pap"
-      >
-        <RootLayout />
-      </StripeProvider>
+      <ConfigProvider>
+        <StripeProvider
+          publishableKey={stripeKey || "CHAVE_AUSENTE"}
+          merchantIdentifier="merchant.com.aktie.pap"
+        >
+          <RootLayout />
+        </StripeProvider>
+      </ConfigProvider>
     </AuthProvider>
   );
 }

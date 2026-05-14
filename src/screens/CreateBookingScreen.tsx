@@ -8,24 +8,38 @@ import { useAuth } from '../context/AuthContext';
 import { CreateBookingScreenStyles as styles } from '../styles/Screens/CreateBookingScreenStyles';
 import { Colors } from '../styles/GlobalStyles';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { usePricingConfig } from '../context/ConfigContext';
 
 import { DateTimeSelector } from '../components/booking/DateTimeSelector';
 import { DurationSelector } from '../components/booking/DurationSelector';
 
 const CreateBookingScreen = ({ route, navigation }: any) => {
-  const { charger } = route.params; 
+  const { charger, p_final_simulated } = route.params; 
   const { user } = useAuth();
+  const { pricing } = usePricingConfig();
   
   const [loading, setLoading] = useState(false);
   const [date, setDate] = useState(new Date());
   const [duration, setDuration] = useState(60); 
   const [showIosPicker, setShowIosPicker] = useState<'date' | 'time' | 'duration' | null>(null);
 
-  // Estimativa puramente visual para UI (UX). 1 Euro = 100 IONS.
-  const rawPriceFiat = charger.preco_kwh || charger.p_base || 0;
-  const priceIonsPerKwh = rawPriceFiat * 100;
+  // ==========================================
+  // LÓGICA FINANCEIRA DE CHECKOUT (PREVIEW)
+  // ==========================================
   const estimatedKwh = charger.potencia_kw * (duration / 60);
-  const estimatedPriceIons = (estimatedKwh * priceIonsPerKwh).toFixed(2);
+  const estimatedPriceIons = Math.round(estimatedKwh * p_final_simulated);
+  
+  let cativoHora = p_final_simulated;
+  if (pricing?.deltas?.tier) {
+    const power = charger.potencia_kw || 0;
+    const tierConfig = pricing.deltas.tier;
+    let tier = tierConfig.nivel_3;
+    if (power <= tierConfig.nivel_1.max_kw) tier = tierConfig.nivel_1;
+    else if (power <= tierConfig.nivel_2.max_kw) tier = tierConfig.nivel_2;
+    cativoHora = tier.ceil;
+  }
+  
+  const custoMaximoCativoSimulado = Math.round(cativoHora * charger.potencia_kw * (duration / 60));
 
   const checkBookingLimits = async () => {
     const startOfDay = new Date();
@@ -61,11 +75,22 @@ const CreateBookingScreen = ({ route, navigation }: any) => {
 
     try {
       const userDoc = await getDoc(doc(db, "users", user.uid));
-      if (userDoc.exists() && userDoc.data()?.is_banned) {
+      const userData = userDoc.data();
+      
+      if (userDoc.exists() && userData?.is_banned) {
         setLoading(false);
         return Alert.alert(
           "ACESSO NEGADO", 
           "Conta suspensa por violação das normas do sistema. Operação abortada."
+        );
+      }
+
+      const availableBalance = (userData?.wallet_balance || 0) - (userData?.locked_balance || 0);
+      if (availableBalance < custoMaximoCativoSimulado) {
+        setLoading(false);
+        return Alert.alert(
+          "SALDO INSUFICIENTE", 
+          `Tens fundos insuficientes para cobrir a caução de segurança (Smart Lock).\n\nNecessário: ${custoMaximoCativoSimulado} IONS\nDisponível: ${availableBalance} IONS`
         );
       }
 
@@ -81,8 +106,6 @@ const CreateBookingScreen = ({ route, navigation }: any) => {
         return Alert.alert("LIMITE DE REDE", "Já tens 3 pedidos pendentes. Aguarda resposta.");
       }
 
-      // SUBMISSÃO ESTRITA (Infallibility Logic):
-      // Apenas identidade e tempo. Sem anulação de tipos ou variáveis espúrias.
       const result = await createBooking({
         charger_id: charger.id,
         user_uid: user.uid,
@@ -172,27 +195,34 @@ const CreateBookingScreen = ({ route, navigation }: any) => {
         )}
 
         <View style={styles.summaryCard}>
-          <Text style={styles.summaryLabel}>Resumo Estimado</Text>
-          <View style={[styles.summaryRow, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}>
-            <View style={{ flex: 0.8 }}>
-              <Text style={styles.summaryText}>Consumo: {estimatedKwh.toFixed(2)} kWh</Text>
+          <Text style={styles.summaryLabel}>Resumo da Transação</Text>
+          
+          <View style={styles.summaryRow}>
+            <View style={styles.summaryColumnLeft}>
               <Text style={styles.summaryText}>Duração: {duration} min</Text>
+              <Text style={styles.summaryText}>Consumo Estimado: {estimatedKwh.toFixed(2)} kWh</Text>
             </View>
-            <View style={{ flex: 1.2, alignItems: 'flex-end' }}>
-              <Text 
-                style={[styles.totalPrice, { fontSize: 26, textAlign: 'right' }]} 
-                numberOfLines={1} 
-                adjustsFontSizeToFit
-              >
+            <View style={styles.summaryColumnRight}>
+              <Text style={styles.summaryBasePriceLabel}>Custo Base Simulado</Text>
+              <Text style={styles.totalPrice} adjustsFontSizeToFit numberOfLines={1}>
                 {estimatedPriceIons} IONS
               </Text>
-              <Text style={[styles.moduleBadge, { textAlign: 'right', marginTop: 4 }]}>Tarifa Dinâmica no Check-in</Text>
             </View>
+          </View>
+
+          <View style={styles.smartLockContainer}>
+            <View style={styles.smartLockHeaderRow}>
+              <Text style={styles.smartLockTitle}>Caução de Segurança</Text>
+              <Text style={styles.smartLockValue}>{custoMaximoCativoSimulado} IONS</Text>
+            </View>
+            <Text style={styles.smartLockDesc}>
+              A tarifa final será processada dinamicamente pelas Cloud Functions no check-in. Para tua segurança e da plataforma, a caução máxima ({cativoHora} IONS/hora) será congelada. O diferencial não gasto será devolvido automaticamente no fim da sessão.
+            </Text>
           </View>
         </View>
 
         <TouchableOpacity 
-          style={[styles.confirmBtn, loading && { opacity: 0.7 }]} 
+          style={[styles.confirmBtn, loading && styles.confirmBtnDisabled]} 
           onPress={handleConfirmBooking} 
           disabled={loading}
         >

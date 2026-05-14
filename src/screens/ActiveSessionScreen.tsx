@@ -152,3 +152,4 @@ const ActiveSessionScreen = ({ route, navigation }: any) => {
 };
 
 export default ActiveSessionScreen;
+

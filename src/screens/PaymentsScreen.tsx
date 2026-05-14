@@ -1,5 +1,6 @@
+// src/screens/PaymentsScreen.tsx
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator, Alert, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator, Alert, ScrollView, TextInput } from 'react-native';
 import { useStripe } from '@stripe/stripe-react-native';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
@@ -13,14 +14,16 @@ const PaymentsScreen = () => {
   const { user } = useAuth();
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
 
-  // Estados do Ledger (Inteiros Puros)
   const [walletBalance, setWalletBalance] = useState(0);
   const [lockedBalance, setLockedBalance] = useState(0);
   const [availableBalance, setAvailableBalance] = useState(0);
   
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
-  const [selectedAmountEuros, setSelectedAmountEuros] = useState(10); // Opções em Euros
+  
+  // Custom Input State
+  const [selectedAmountEuros, setSelectedAmountEuros] = useState<number>(10);
+  const [customInput, setCustomInput] = useState<string>('');
 
   const topUpOptions = [5, 10, 20, 50];
 
@@ -31,7 +34,6 @@ const PaymentsScreen = () => {
     const unsubscribe = onSnapshot(userRef, (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
-        // Leitura nativa de inteiros
         const wBalance = Math.floor(data.wallet_balance || 0);
         const lBalance = Math.floor(data.locked_balance || 0);
         
@@ -48,13 +50,21 @@ const PaymentsScreen = () => {
     return () => unsubscribe();
   }, [user]);
 
+  // Deriva o valor final (em euros e em IONS) baseado no facto de o user estar a usar os botões ou o input
+  const effectiveEuros = customInput !== '' ? parseFloat(customInput) || 0 : selectedAmountEuros;
+  const effectiveIons = Math.floor(effectiveEuros * 100);
+
   const handleTopUp = async () => {
     if (processing) return;
+    if (effectiveEuros < 5) {
+        return Alert.alert("Mínimo Inválido", "O valor mínimo de carregamento é 5€.");
+    }
+    
     setProcessing(true);
 
     try {
       const createIntent = httpsCallable(functions, 'createTopUpIntent');
-      const response = await createIntent({ amountEuros: selectedAmountEuros });
+      const response = await createIntent({ amountEuros: effectiveEuros });
       const { clientSecret } = response.data as any;
 
       if (!clientSecret) throw new Error("Falha ao gerar o token de pagamento.");
@@ -75,8 +85,8 @@ const PaymentsScreen = () => {
       if (presentError) {
         if (presentError.code !== 'Canceled') throw new Error(presentError.message);
       } else {
-        // Conversão visual apenas para o Alerta. 10€ = 1000 IONS.
-        Alert.alert("Sucesso", `O teu Top-Up de ${selectedAmountEuros * 100} IONS está a ser processado. O saldo atualizará em breve.`);
+        Alert.alert("Sucesso", `O teu Top-Up de ${effectiveIons} IONS está a ser processado.`);
+        setCustomInput(''); // Reset após sucesso
       }
 
     } catch (error: any) {
@@ -84,6 +94,11 @@ const PaymentsScreen = () => {
     } finally {
       setProcessing(false);
     }
+  };
+
+  const handleSelectPreset = (amount: number) => {
+    setCustomInput('');
+    setSelectedAmountEuros(amount);
   };
 
   if (loading) return <View style={styles.center}><ActivityIndicator size="large" color={Colors.primary} /></View>;
@@ -98,7 +113,6 @@ const PaymentsScreen = () => {
           <Ionicons name="information-circle-outline" size={20} color="#FFF" />
         </View>
         
-        {/* Remoção do .toFixed(2) - Exibição de Inteiros */}
         <Text style={styles.availableBalance}>{availableBalance} IONS</Text>
         
         <View style={styles.ledgerDivider} />
@@ -120,28 +134,52 @@ const PaymentsScreen = () => {
         {topUpOptions.map((amount) => (
           <TouchableOpacity
             key={amount}
-            style={[styles.amountOption, selectedAmountEuros === amount && styles.amountOptionSelected]}
-            onPress={() => setSelectedAmountEuros(amount)}
+            style={[styles.amountOption, (selectedAmountEuros === amount && customInput === '') && styles.amountOptionSelected]}
+            onPress={() => handleSelectPreset(amount)}
           >
-            <FontAwesome6 name="coins" size={18} color={selectedAmountEuros === amount ? "#FFF" : Colors.primary} />
-            <Text style={[styles.amountText, selectedAmountEuros === amount && styles.amountTextSelected]}>
-              {amount * 100} {/* Exibe 500, 1000, 2000, 5000 */}
+            <FontAwesome6 name="coins" size={18} color={(selectedAmountEuros === amount && customInput === '') ? "#FFF" : Colors.primary} />
+            <Text style={[styles.amountText, (selectedAmountEuros === amount && customInput === '') && styles.amountTextSelected]}>
+              {amount * 100} 
             </Text>
           </TouchableOpacity>
         ))}
       </View>
 
+      <View style={{ marginTop: 15, marginBottom: 25 }}>
+        <Text style={{ fontSize: 14, color: Colors.dark, fontWeight: 'bold', marginBottom: 8 }}>Valor Personalizado (€)</Text>
+        <TextInput
+            style={{
+                backgroundColor: Colors.white,
+                borderWidth: 2,
+                borderColor: customInput !== '' ? Colors.primary : Colors.border,
+                borderRadius: 12,
+                padding: 15,
+                fontSize: 18,
+                color: Colors.dark,
+            }}
+            placeholder="Ex: 15"
+            keyboardType="numeric"
+            value={customInput}
+            onChangeText={setCustomInput}
+        />
+        {effectiveIons > 0 && (
+            <Text style={{ textAlign: 'right', marginTop: 8, color: Colors.primary, fontWeight: 'bold' }}>
+                Vais receber: {effectiveIons} IONS
+            </Text>
+        )}
+      </View>
+
       <TouchableOpacity 
         style={styles.payButton} 
         onPress={handleTopUp} 
-        disabled={processing}
+        disabled={processing || effectiveEuros < 5}
       >
         {processing ? (
           <ActivityIndicator color="#FFF" />
         ) : (
           <>
             <Ionicons name="card" size={20} color="#FFF" style={{ marginRight: 10 }} />
-            <Text style={styles.payButtonText}>Pagar {selectedAmountEuros} €</Text>
+            <Text style={styles.payButtonText}>Pagar {effectiveEuros > 0 ? effectiveEuros.toFixed(2) : "0.00"} €</Text>
           </>
         )}
       </TouchableOpacity>

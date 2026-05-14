@@ -7,8 +7,9 @@ import { db, storage } from '../config/firebaseConfig';
 // ==========================================
 export interface ChargerFormData {
   morada: string;
-  potencia_kw: string;
-  preco_kwh: string;
+  address_city: string; // Adicionado para suportar Delta Macro (Geolocalização do Preço)
+  potencia_kw: number;  // Alterado de string para number
+  p_base: number;       // Alterado de preco_kwh (string) para p_base (number)
   tipo_tomada: string;
   location_type: "Indoor" | "Outdoor";
   connection_type: "Socket" | "Tethered";
@@ -45,7 +46,6 @@ const uploadChargerImage = async (uri: string, ownerUid: string) => {
 // 3. GEOCODIFICAÇÃO (CUSTO-ZERO VIA NOMINATIM)
 // ==========================================
 
-// Geocodificação Direta: Morada -> Coordenadas
 export const fetchAddressSuggestions = async (query: string) => {
   if (query.length < 5) return [];
   try {
@@ -66,7 +66,6 @@ export const fetchAddressSuggestions = async (query: string) => {
   }
 };
 
-// Geocodificação Inversa: Coordenadas -> Morada
 export const getAddressFromCoords = async (latitude: number, longitude: number) => {
   try {
     const baseUrl = "https://nominatim.openstreetmap.org/reverse";
@@ -109,13 +108,12 @@ export const createCharger = async (data: ChargerFormData) => {
       firebaseUrl = await uploadChargerImage(data.imageUri, data.owner_uid);
     }
 
-    const potencia = parseFloat(String(data.potencia_kw).replace(',', '.'));
-    const preco = parseFloat(String(data.preco_kwh).replace(',', '.'));
-
+    // Removidas as conversões de string redundantes já que a interface agora exige numbers
     const docRef = await addDoc(collection(db, "chargers"), {
       morada: data.morada,
-      potencia_kw: potencia,
-      preco_kwh: preco,
+      address_city: data.address_city,
+      potencia_kw: data.potencia_kw,
+      p_base: data.p_base, // Consistência com o modelo de dados exigido pelas Cloud Functions
       tipo_tomada: data.tipo_tomada,
       location_type: data.location_type,
       connection_type: data.connection_type,

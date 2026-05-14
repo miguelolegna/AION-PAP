@@ -1,7 +1,7 @@
 // src/screens/MyChargersScreen.tsx
 import React, { useState, useEffect } from 'react';
 import { View, FlatList, Text, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
-import { collection, query, where, onSnapshot, doc, deleteDoc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../config/firebaseConfig';
 import { useAuth } from '../context/AuthContext';
 import { Colors } from '../styles/GlobalStyles';
@@ -20,7 +20,12 @@ const MyChargersScreen = ({ navigation }: any) => {
     const q = query(collection(db, "chargers"), where("owner_uid", "==", user.uid));
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      setMyChargers(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      // Filtragem em memória para evitar a exigência imediata de um composite index no Firestore
+      const chargers = snapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() }))
+        .filter((c: any) => !c.is_deleted);
+      
+      setMyChargers(chargers);
       setLoading(false);
     }, (error) => {
       console.error("Erro MyChargers:", error);
@@ -31,10 +36,14 @@ const MyChargersScreen = ({ navigation }: any) => {
   }, [user]);
 
   const handleDelete = (id: string) => {
-    Alert.alert("ATENÇÃO", "ELIMINAR ESTE POSTO PERMANENTEMENTE?", [
+    Alert.alert("ATENÇÃO", "ELIMINAR ESTE POSTO?", [
       { text: "CANCELAR", style: "cancel" },
       { text: "ELIMINAR", style: "destructive", onPress: async () => {
-          await deleteDoc(doc(db, "chargers", id));
+          // Soft Delete OBRIGATÓRIO: Preserva o histórico de reservas e integridade do Ledger
+          await updateDoc(doc(db, "chargers", id), { 
+            is_deleted: true,
+            is_active: false 
+          });
       }}
     ]);
   };
@@ -58,29 +67,13 @@ const MyChargersScreen = ({ navigation }: any) => {
           <View style={styles.emptyContainer}>
             <Ionicons name="flash-off" size={50} color={Colors.gray} />
             <Text style={styles.emptyText}>Não tens postos registados na tua rede.</Text>
-            {/* O botão aqui foi removido pois agora existe o FAB global */}
           </View>
         }
       />
 
-      {/* FAB - Floating Action Button (Sempre Visível) */}
+      {/* FAB - Estilos extraídos para o ficheiro correto */}
       <TouchableOpacity 
-        style={{
-          position: 'absolute',
-          bottom: 30,
-          right: 30,
-          backgroundColor: Colors.primary,
-          width: 60,
-          height: 60,
-          borderRadius: 30,
-          justifyContent: 'center',
-          alignItems: 'center',
-          elevation: 8,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.3,
-          shadowRadius: 5,
-        }}
+        style={styles.fab}
         onPress={() => navigation.navigate('AddCharger')}
       >
         <Ionicons name="add" size={32} color="white" />
