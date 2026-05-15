@@ -71,41 +71,40 @@ export const AddChargerStyles = StyleSheet.create({
 
   // Seletor Grid 2x2
   typeSelectorContainer: { 
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
     backgroundColor: '#F0F2F5', 
     borderRadius: 12, 
     padding: 8, 
     borderWidth: 1, 
     borderColor: Colors.border, 
-    position: 'relative', 
-    height: 196, // Mantém a altura fixa para acomodar as duas linhas de 90px + padding
-    overflow: 'hidden' 
-  },
-  typeOverlay: { 
-    flexDirection: 'row', 
-    flexWrap: 'wrap', 
-    width: '100%', // Força o preenchimento total para o wrap funcionar
-    zIndex: 2 
+    marginBottom: 15,
   },
   typeOption: { 
+    width: '48%',
+    height: 90,
     justifyContent: 'center', 
     alignItems: 'center',
+    borderRadius: 8,
     backgroundColor: 'transparent',
+    borderWidth: 2,
+    borderColor: 'transparent',
   },
   typeOptionSelected: { 
     backgroundColor: Colors.white, 
-    borderRadius: 10, 
+    borderColor: Colors.primary,
     shadowColor: '#000', 
     shadowOffset: { width: 0, height: 2 }, 
     shadowOpacity: 0.1, 
     shadowRadius: 4, 
-    elevation: 4, 
-    zIndex: 1 
+    elevation: 3, 
   },
   typeIconContainer: { 
-    marginBottom: 4 
+    marginBottom: 8 
   },  
   typeOptionText: { 
-    fontSize: 13, 
+    fontSize: 14, 
     color: Colors.gray, 
     fontWeight: '700' 
   },  

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Alert, ActivityIndicator, Platform, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, Alert, ActivityIndicator, Platform, ScrollView, Modal } from 'react-native';
 import { collection, query, where, getDocs, getDoc, doc, Timestamp } from 'firebase/firestore';
 import { db } from '../config/firebaseConfig';
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
@@ -7,7 +7,7 @@ import { createBooking } from '../services/ChargerService';
 import { useAuth } from '../context/AuthContext';
 import { CreateBookingScreenStyles as styles } from '../styles/Screens/CreateBookingScreenStyles';
 import { Colors } from '../styles/GlobalStyles';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { usePricingConfig } from '../context/ConfigContext';
 
 import { DateTimeSelector } from '../components/booking/DateTimeSelector';
@@ -22,9 +22,10 @@ const CreateBookingScreen = ({ route, navigation }: any) => {
   const [date, setDate] = useState(new Date());
   const [duration, setDuration] = useState(60); 
   const [showIosPicker, setShowIosPicker] = useState<'date' | 'time' | 'duration' | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   // ==========================================
-  // LÓGICA FINANCEIRA DE CHECKOUT (PREVIEW)
+  // LÓGICA FINANCEIRA DE CHECKOUT
   // ==========================================
   const estimatedKwh = charger.potencia_kw * (duration / 60);
   const estimatedPriceIons = Math.round(estimatedKwh * p_final_simulated);
@@ -69,7 +70,10 @@ const CreateBookingScreen = ({ route, navigation }: any) => {
   };
 
   const handleConfirmBooking = async () => {
-    if (!user) return Alert.alert("Erro", "Sessão expirada.");
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
     
     setLoading(true);
 
@@ -142,98 +146,130 @@ const CreateBookingScreen = ({ route, navigation }: any) => {
   };
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <View style={styles.content}>
+    <>
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+        <View style={styles.content}>
 
-        <View style={styles.stationCard}>
-          <View style={styles.iconWrapper}>
-            <MaterialCommunityIcons name="ev-station" size={30} color={Colors.primary} />
-          </View>
-          <View style={styles.stationInfo}>
-            <Text style={styles.stationName}>{charger.morada}</Text>
-            <Text style={styles.stationSub}>{charger.potencia_kw} kW • {charger.tipo_tomada || charger.tipo_ficha}</Text>
-          </View>
-        </View>
-
-        <View style={styles.divider} />
-
-        <Text style={styles.sectionLabel}>1. Quando quer carregar?</Text>
-        <DateTimeSelector 
-          date={date} 
-          onOpenDate={() => Platform.OS === 'android' ? 
-            DateTimePickerAndroid.open({ value: date, onChange: onDateChange, mode: 'date', display: 'calendar' }) : 
-            setShowIosPicker('date')}
-          onOpenTime={() => Platform.OS === 'android' ? 
-            DateTimePickerAndroid.open({ value: date, onChange: onDateChange, mode: 'time', display: 'spinner', is24Hour: true }) : 
-            setShowIosPicker('time')}
-        />
-
-        <Text style={styles.sectionLabel}>2. Durante quanto tempo?</Text>
-        <DurationSelector 
-          duration={duration}
-          onSelectShortcut={(mins: number) => setDuration(mins)}
-          onOpenPicker={() => {
-            const d = new Date(); d.setHours(Math.floor(duration/60), duration%60);
-            Platform.OS === 'android' ? 
-              DateTimePickerAndroid.open({ value: d, onChange: onDurationChange, mode: 'time', display: 'spinner', is24Hour: true }) : 
-              setShowIosPicker('duration');
-          }}
-        />
-
-        {Platform.OS === 'ios' && showIosPicker && (
-          <DateTimePicker
-            value={showIosPicker === 'duration' ? (() => { 
-              const d = new Date(); d.setHours(Math.floor(duration/60), duration%60); return d; 
-            })() : date}
-            mode={showIosPicker === 'duration' ? 'time' : showIosPicker}
-            display="spinner"
-            is24Hour={true}
-            onChange={showIosPicker === 'duration' ? onDurationChange : onDateChange}
-            textColor={Colors.dark}
-            accentColor={Colors.primary}
-          />
-        )}
-
-        <View style={styles.summaryCard}>
-          <Text style={styles.summaryLabel}>Resumo da Transação</Text>
-          
-          <View style={styles.summaryRow}>
-            <View style={styles.summaryColumnLeft}>
-              <Text style={styles.summaryText}>Duração: {duration} min</Text>
-              <Text style={styles.summaryText}>Consumo Estimado: {estimatedKwh.toFixed(2)} kWh</Text>
+          <View style={styles.stationCard}>
+            <View style={styles.iconWrapper}>
+              <MaterialCommunityIcons name="ev-station" size={30} color={Colors.primary} />
             </View>
-            <View style={styles.summaryColumnRight}>
-              <Text style={styles.summaryBasePriceLabel}>Custo Base Simulado</Text>
-              <Text style={styles.totalPrice} adjustsFontSizeToFit numberOfLines={1}>
-                {estimatedPriceIons} IONS
+            <View style={styles.stationInfo}>
+              <Text style={styles.stationName}>{charger.morada}</Text>
+              <Text style={styles.stationSub}>{charger.potencia_kw} kW • {charger.tipo_tomada || charger.tipo_ficha}</Text>
+            </View>
+          </View>
+
+          <View style={styles.divider} />
+
+          <Text style={styles.sectionLabel}>1. Quando quer carregar?</Text>
+          <DateTimeSelector 
+            date={date} 
+            onOpenDate={() => Platform.OS === 'android' ? 
+              DateTimePickerAndroid.open({ value: date, onChange: onDateChange, mode: 'date', display: 'calendar' }) : 
+              setShowIosPicker('date')}
+            onOpenTime={() => Platform.OS === 'android' ? 
+              DateTimePickerAndroid.open({ value: date, onChange: onDateChange, mode: 'time', display: 'spinner', is24Hour: true }) : 
+              setShowIosPicker('time')}
+          />
+
+          <Text style={styles.sectionLabel}>2. Durante quanto tempo?</Text>
+          <DurationSelector 
+            duration={duration}
+            onSelectShortcut={(mins: number) => setDuration(mins)}
+            onOpenPicker={() => {
+              const d = new Date(); d.setHours(Math.floor(duration/60), duration%60);
+              Platform.OS === 'android' ? 
+                DateTimePickerAndroid.open({ value: d, onChange: onDurationChange, mode: 'time', display: 'spinner', is24Hour: true }) : 
+                setShowIosPicker('duration');
+            }}
+          />
+
+          {Platform.OS === 'ios' && showIosPicker && (
+            <DateTimePicker
+              value={showIosPicker === 'duration' ? (() => { 
+                const d = new Date(); d.setHours(Math.floor(duration/60), duration%60); return d; 
+              })() : date}
+              mode={showIosPicker === 'duration' ? 'time' : showIosPicker}
+              display="spinner"
+              is24Hour={true}
+              onChange={showIosPicker === 'duration' ? onDurationChange : onDateChange}
+              textColor={Colors.dark}
+              accentColor={Colors.primary}
+            />
+          )}
+
+          <View style={styles.summaryCard}>
+            <Text style={styles.summaryLabel}>Resumo da Transação</Text>
+            
+            <View style={styles.summaryRow}>
+              <View style={styles.summaryColumnLeft}>
+                <Text style={styles.summaryText}>Duração: {duration} min</Text>
+                <Text style={styles.summaryText}>Consumo Estimado: {estimatedKwh.toFixed(2)} kWh</Text>
+              </View>
+              <View style={styles.summaryColumnRight}>
+                <Text style={styles.summaryBasePriceLabel}>Custo Base Simulado</Text>
+                <Text style={styles.totalPrice} adjustsFontSizeToFit numberOfLines={1}>
+                  {estimatedPriceIons} IONS
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.smartLockContainer}>
+              <View style={styles.smartLockHeaderRow}>
+                <Text style={styles.smartLockTitle}>Caução de Segurança</Text>
+                <Text style={styles.smartLockValue}>{custoMaximoCativoSimulado} IONS</Text>
+              </View>
+              <Text style={styles.smartLockDesc}>
+                A tarifa final será processada dinamicamente pelas Cloud Functions no check-in. Para tua segurança e da plataforma, a caução máxima ({cativoHora} IONS/hora) será congelada. O diferencial não gasto será devolvido automaticamente no fim da sessão.
               </Text>
             </View>
           </View>
 
-          <View style={styles.smartLockContainer}>
-            <View style={styles.smartLockHeaderRow}>
-              <Text style={styles.smartLockTitle}>Caução de Segurança</Text>
-              <Text style={styles.smartLockValue}>{custoMaximoCativoSimulado} IONS</Text>
-            </View>
-            <Text style={styles.smartLockDesc}>
-              A tarifa final será processada dinamicamente pelas Cloud Functions no check-in. Para tua segurança e da plataforma, a caução máxima ({cativoHora} IONS/hora) será congelada. O diferencial não gasto será devolvido automaticamente no fim da sessão.
+          <TouchableOpacity 
+            style={[styles.confirmBtn, loading && styles.confirmBtnDisabled]} 
+            onPress={handleConfirmBooking} 
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color={Colors.white} />
+            ) : (
+              <Text style={styles.confirmBtnText}>SOLICITAR RESERVA</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+
+      {/* POPUP DE AUTENTICAÇÃO */}
+      <Modal visible={showAuthModal} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Ionicons name="lock-closed" size={50} color={Colors.primary} style={{ marginBottom: 15 }} />
+            <Text style={styles.modalTitle}>Acesso Restrito</Text>
+            <Text style={styles.modalText}>
+              Para solicitares uma reserva e congelar a caução, precisas de iniciar sessão ou criar uma conta na plataforma.
             </Text>
+            
+            <TouchableOpacity 
+              style={styles.modalButtonPrimary} 
+              onPress={() => {
+                setShowAuthModal(false);
+                navigation.navigate('Auth');
+              }}
+            >
+              <Text style={styles.modalButtonPrimaryText}>FAZER LOGIN</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.modalButtonSecondary} 
+              onPress={() => setShowAuthModal(false)}
+            >
+              <Text style={styles.modalButtonSecondaryText}>CANCELAR</Text>
+            </TouchableOpacity>
           </View>
         </View>
-
-        <TouchableOpacity 
-          style={[styles.confirmBtn, loading && styles.confirmBtnDisabled]} 
-          onPress={handleConfirmBooking} 
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#FFF" />
-          ) : (
-            <Text style={styles.confirmBtnText}>SOLICITAR RESERVA</Text>
-          )}
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+      </Modal>
+    </>
   );
 };
 

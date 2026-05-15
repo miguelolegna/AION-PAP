@@ -103,7 +103,7 @@ const ChargerListItem = ({ charger, onDelete, onEdit }: ChargerListItemProps) =>
         >
           <Ionicons name="trash-outline" size={22} color={Colors.danger} />
         </TouchableOpacity>
-      </View>
+      </View> 
     </View>
   );
 };

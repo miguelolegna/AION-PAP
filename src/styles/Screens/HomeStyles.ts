@@ -1,14 +1,14 @@
 // src/styles/Screens/HomeStyles.ts
 import { StyleSheet } from 'react-native';
-import { Colors } from '../GlobalStyles';
+import { Colors, Metrics } from '../GlobalStyles';
 
 export const HomeStyles = StyleSheet.create({
   loadingContainer: {
     flex: 1, 
     justifyContent: 'center', 
-    backgroundColor: Colors.background 
+    backgroundColor: Colors.white 
   },
-  // Elementos do Header
+  // Header
   headerIconContainer: {
     backgroundColor: Colors.primaryLight, 
     padding: 15, 
@@ -39,7 +39,7 @@ export const HomeStyles = StyleSheet.create({
     fontWeight: 'bold', 
     letterSpacing: 0.5 
   },
-  // Elementos da Lista e Cartões
+  // Lista
   listContent: {
     paddingHorizontal: 20, 
     paddingBottom: 100 
@@ -78,85 +78,90 @@ export const HomeStyles = StyleSheet.create({
   cardFooterRow: {
     flexDirection: 'row', 
     justifyContent: 'space-between', 
-    alignItems: 'flex-end', 
+    alignItems: 'center', 
     marginTop: 15 
   },
   cardPriceText: {
-    fontSize: 20, 
-    fontWeight: 'bold', 
+    fontSize: 18, 
+    fontWeight: '900', 
     color: Colors.primary 
   },
   cardPriceUnit: {
-    fontSize: 14, 
+    fontSize: 12, 
     color: Colors.gray, 
     fontWeight: '500' 
   },
-  loginRequiredBadge: {
-    fontSize: 11, 
-    color: Colors.danger, 
-    fontWeight: 'bold', 
-    backgroundColor: Colors.dangerLight, 
-    paddingHorizontal: 6, 
-    paddingVertical: 2, 
-    borderRadius: 4 
-  },
-  
-  // Elementos das Reservas Pendentes (Novo Bloco)
+  // Pedidos Pendentes (Notificação de Sistema)
   pendingSection: {
-    marginBottom: 20,
+    marginBottom: 25,
+    marginTop: 10,
   },
   pendingSectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: Colors.dark,
-    marginBottom: 10,
+    fontSize: 13,
+    fontWeight: '900',
+    color: Colors.gray,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 12,
     marginLeft: 5,
   },
   pendingCard: {
-    backgroundColor: Colors.warning + '15',
+    backgroundColor: '#FFF9F0', // Tom creme muito subtil
     borderWidth: 1,
-    borderColor: Colors.warning + '50',
-    borderRadius: 12,
-    padding: 15,
+    borderColor: '#FFE0B2',
+    borderRadius: 20,
+    padding: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 10,
+    elevation: 1,
   },
   pendingInfo: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
   },
-  pendingTextContainer: {
-    marginLeft: 10,
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: Colors.warning,
+    marginRight: 12,
   },
   pendingTextLabel: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: 'bold',
     color: Colors.dark,
   },
   pendingTextSub: {
-    fontSize: 12,
+    fontSize: 11,
     color: Colors.gray,
-    marginTop: 2,
+    fontWeight: '600',
+    marginTop: 1,
   },
   pendingActions: {
     flexDirection: 'row',
-    gap: 10,
+    alignItems: 'center',
   },
-  actionButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  rejectCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Colors.white,
+    borderWidth: 1,
+    borderColor: '#FFCDD2',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  acceptCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Colors.success,
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 2,
-  },
-  rejectButton: {
-    backgroundColor: Colors.danger,
-  },
-  acceptButton: {
-    backgroundColor: Colors.success,
   }
 });

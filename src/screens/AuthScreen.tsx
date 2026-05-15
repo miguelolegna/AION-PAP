@@ -12,7 +12,7 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
-const AuthScreen = ({ navigation }: any) => {
+const AuthScreen = ({ navigation, route }: any) => {
   const { login, register } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [localLoading, setLocalLoading] = useState(false);

@@ -9,7 +9,7 @@ import { MyChargersStyles as styles } from '../styles/Screens/MyChargersStyles';
 import ChargerListItem from '../components/ChargerListItem';
 import { Ionicons } from '@expo/vector-icons';
 
-const MyChargersScreen = ({ navigation }: any) => {
+const MyChargersScreen = ({ navigation, route }: any) => {
   const { user } = useAuth();
   const [myChargers, setMyChargers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

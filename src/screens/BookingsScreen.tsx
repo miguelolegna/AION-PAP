@@ -1,4 +1,3 @@
-// src/screens/BookingsScreen.tsx
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, ActivityIndicator, SafeAreaView, TouchableOpacity, Alert, StatusBar } from 'react-native';
 import { collection, query, where, onSnapshot, orderBy, getDocs } from 'firebase/firestore'; 
@@ -9,7 +8,7 @@ import { Colors, GlobalStyles } from '../styles/GlobalStyles';
 import { BookingsStyles as styles } from '../styles/Screens/BookingsStyles';
 import { Ionicons } from '@expo/vector-icons';
 
-const BookingsScreen = ({ navigation }: any) => {
+const BookingsScreen = ({ navigation, route }: any) => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
@@ -58,20 +57,13 @@ const BookingsScreen = ({ navigation }: any) => {
         return;
       }
 
-      // CORREÇÃO CRÍTICA: Invocação direta da Cloud Function
-      // É o backend que avalia os 5000 IONS vs o custo da reserva.
       const iniciarSessao = httpsCallable(functions, 'iniciarSessaoCarregamento');
-      
-      // Assumindo a duração original (se houver) ou fallback de 2 horas se os dados estiverem corrompidos
       const duracaoHoras = 2; 
 
       await iniciarSessao({
         bookingId: bookingId,
         duracaoHoras: duracaoHoras
       });
-
-      // Sucesso Silencioso: A Cloud Function bloqueou os fundos e mudou o status para 'active'.
-      // O listener do Firestore fará a UI atualizar o botão para "VER SESSÃO ATIVA".
 
     } catch (functionError: any) {
       console.error("Erro da Cloud Function:", functionError);
@@ -102,7 +94,6 @@ const BookingsScreen = ({ navigation }: any) => {
       <View style={styles.bookingCard}>
         <View style={styles.headerRow}>
           <Text style={styles.address} numberOfLines={1}>
-            {/* Fallback de UI visto que a morada foi retirada da reserva */}
             {item.charger_id ? `Posto ${item.charger_id.substring(0, 6)}` : "Posto Desconhecido"}
           </Text>
           <View style={[styles.statusBadge, { backgroundColor: isActive ? Colors.primary : Colors.primaryLight }]}>
@@ -148,6 +139,28 @@ const BookingsScreen = ({ navigation }: any) => {
 
   if (loading) return <View style={styles.loadingContainer}><ActivityIndicator size="large" color={Colors.primary} /></View>;
 
+  // AQUI: Retorna imediatamente o ecrã de bloqueio se não houver utilizador
+  if (!user) {
+    return (
+      <SafeAreaView style={[styles.container, { justifyContent: 'center', alignItems: 'center', padding: 20 }]}>
+        <Ionicons name="lock-closed-outline" size={80} color={Colors.gray} style={{ marginBottom: 20 }} />
+        <Text style={{ fontSize: 24, fontWeight: 'bold', color: Colors.dark, textAlign: 'center', marginBottom: 10 }}>
+          Acesso Restrito
+        </Text>
+        <Text style={{ fontSize: 16, color: Colors.gray, textAlign: 'center', marginBottom: 30 }}>
+          Precisas de criar uma conta ou fazer login para acederes e gerires as tuas reservas.
+        </Text>
+        <TouchableOpacity 
+          style={[styles.primaryButton, { backgroundColor: Colors.primary, width: '100%' }]}
+          onPress={() => navigation.navigate('Auth')}
+        >
+          <Text style={styles.buttonText}>IR PARA LOGIN</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+    );
+  }
+
+  // Se o utilizador existir, prossegue com o render normal
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
@@ -168,7 +181,6 @@ const BookingsScreen = ({ navigation }: any) => {
         data={bookings}
         keyExtractor={item => item.id}
         renderItem={renderItem}
-        // Correção de UI: Margem inferior aplicada aqui
         contentContainerStyle={[styles.listContent, { paddingBottom: 100 }]} 
         ListEmptyComponent={
           <View style={styles.emptyContainer}>

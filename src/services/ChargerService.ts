@@ -77,14 +77,23 @@ export const getAddressFromCoords = async (latitude: number, longitude: number) 
     });
 
     const response = await fetch(`${baseUrl}?${params.toString()}`, { 
-      headers: { 'User-Agent': 'Aktie-Production-v1' } 
+      headers: { 
+        'User-Agent': 'Aktie-Production-v1 (contact: teu-email@exemplo.com)',
+        'Accept': 'application/json'
+      } 
     });
-    
+
+    // Validação crítica antes de tentar o parse
+    const contentType = response.headers.get("content-type");
+    if (!response.ok || !contentType || !contentType.includes("application/json")) {
+      return "Localização Manual (API Limitada)";
+    }
+
     const data = await response.json();
     
     if (data && data.address) {
       const addr = data.address;
-      const road = addr.road || addr.pedestrian || "";
+      const road = addr.road || addr.pedestrian || addr.suburb || "";
       const houseNumber = addr.house_number ? ` ${addr.house_number}` : "";
       const city = addr.city || addr.town || addr.village || "";
       
@@ -92,7 +101,6 @@ export const getAddressFromCoords = async (latitude: number, longitude: number) 
     }
     return "Morada selecionada";
   } catch (error) {
-    console.error("Reverse Geocoding failed:", error);
     return "Coordenadas manuais";
   }
 };

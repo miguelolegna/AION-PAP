@@ -6,7 +6,7 @@ import { ProfileStyles as styles } from '../styles/Screens/ProfileStyles';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors } from '../styles/GlobalStyles';
 
-const ProfileScreen = ({ navigation }: any) => {
+const ProfileScreen = ({ navigation, route }: any) => {
   const { user, logout } = useAuth();
 
   // Uniformização estrita para Preto/Cinzento (Colors.dark), mantendo a exceção de perigo

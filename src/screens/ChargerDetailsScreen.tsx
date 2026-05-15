@@ -169,12 +169,12 @@ const ChargerDetailsScreen = ({ route, navigation }: any) => {
             </View>
           </View>
 
-          <Text style={styles.sectionTitle}>Instruções de Acesso</Text>
+          {/* <Text style={styles.sectionTitle}>Instruções de Acesso</Text>
           <View style={styles.infoSection}>
             <Text style={styles.infoText}>
               {charger.access_info || "As instruções detalhadas serão fornecidas após a confirmação da reserva pelo anfitrião."}
             </Text>
-          </View>
+          </View> */}
         </View>
       </ScrollView>
 

@@ -8,7 +8,7 @@ import { StripeProvider } from '@stripe/stripe-react-native';
 
 import AppTabs from './src/navigation/AppTabs';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
-import { ConfigProvider, usePricingConfig } from './src/context/ConfigContext'; // Importação obrigatória
+import { ConfigProvider, usePricingConfig } from './src/context/ConfigContext';
 import AuthScreen from './src/screens/AuthScreen';
 import SmartSplashScreen from './src/screens/SplashScreen';
 import AddChargerScreen from './src/screens/AddChargerScreen'; 
@@ -18,8 +18,10 @@ import HistoryScreen from './src/screens/HistoryScreen';
 import ActiveSessionScreen from './src/screens/ActiveSessionScreen'; 
 import CreateBookingScreen from './src/screens/CreateBookingScreen';
 import PaymentsScreen from './src/screens/PaymentsScreen';
+import LocationPicker from './src/screens/LocationPickerScreen'; // Importação adicionada
 import { Colors } from './src/styles/GlobalStyles';
 import { enableScreens } from 'react-native-screens';
+import LocationPickerScreen from './src/screens/LocationPickerScreen';
 
 enableScreens(); 
 
@@ -43,6 +45,7 @@ const AppNavigator = () => (
       <Stack.Screen name="MyChargers" component={MyChargersScreen} options={{ headerShown: true, title: 'Os Meus Postos', headerTintColor: Colors.primary }} />
       <Stack.Screen name="History" component={HistoryScreen} options={{ headerShown: true, title: 'Histórico', headerTintColor: Colors.primary }} />
       <Stack.Screen name="Payments" component={PaymentsScreen} options={{ headerShown: true, title: 'Carteira de IONS', headerTintColor: Colors.primary }} />
+      <Stack.Screen name="LocationPicker" component={LocationPickerScreen} options={{ headerShown: true, title: 'Selecionar Localização' }} />
     </Stack.Navigator>
   </NavigationContainer>
 );
@@ -53,7 +56,7 @@ const AppNavigator = () => (
 
 const RootLayout = () => {
   const { loading: authLoading } = useAuth();
-  const { loading: configLoading } = usePricingConfig(); // Sincronização com o motor de preços
+  const { loading: configLoading } = usePricingConfig();
   const [fontsLoaded, setFontsLoaded] = useState(false);
   const [isSplashVisible, setSplashVisible] = useState(true);
   const [mountNavigator, setMountNavigator] = useState(false);
@@ -80,7 +83,6 @@ const RootLayout = () => {
     prepare();
   }, []);
 
-  // O Splash Screen só deve permitir a saída quando Fontes, Auth E Configurações estiverem prontas.
   const isAppReady = fontsLoaded && !authLoading && !configLoading;
 
   return (
@@ -103,9 +105,6 @@ const RootLayout = () => {
 // ============================================================================
 
 const stripeKey = process.env.EXPO_PUBLIC_STRIPE_API_KEY;
-if (!stripeKey) {
-  console.error("FALHA CRÍTICA: EXPO_PUBLIC_STRIPE_API_KEY ausente.");
-}
 
 export default function App() {
   return (

@@ -7,7 +7,7 @@ export const CreateBookingScreenStyles = StyleSheet.create({
     backgroundColor: Colors.white,
   },
   content: {
-    padding: Metrics.padding,
+    padding: Metrics.padding || 20,
   },
   stationCard: {
     flexDirection: 'row',
@@ -35,7 +35,7 @@ export const CreateBookingScreenStyles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: '#EEE',
+    backgroundColor: Colors.border,
     marginBottom: 25,
   },
   sectionLabel: {
@@ -49,10 +49,14 @@ export const CreateBookingScreenStyles = StyleSheet.create({
     padding: 25,
     borderRadius: 25,
     marginTop: 10,
-    ...GlobalStyles.shadow,
+    elevation: 5,
+    shadowColor: Colors.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
   },
   summaryLabel: {
-    color: '#AAA',
+    color: Colors.border,
     fontSize: 11,
     textTransform: 'uppercase',
     letterSpacing: 1,
@@ -87,11 +91,11 @@ export const CreateBookingScreenStyles = StyleSheet.create({
     fontWeight: 'bold',
   },
   smartLockContainer: {
-    backgroundColor: 'rgba(245, 124, 0, 0.1)',
+    backgroundColor: Colors.dangerLight,
     padding: 12,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: 'rgba(245, 124, 0, 0.3)',
+    borderColor: Colors.danger,
   },
   smartLockHeaderRow: {
     flexDirection: 'row',
@@ -100,17 +104,17 @@ export const CreateBookingScreenStyles = StyleSheet.create({
     marginBottom: 4,
   },
   smartLockTitle: {
-    color: '#E65100',
+    color: Colors.danger,
     fontWeight: 'bold',
     fontSize: 14,
   },
   smartLockValue: {
-    color: '#E65100',
+    color: Colors.danger,
     fontWeight: '900',
     fontSize: 16,
   },
   smartLockDesc: {
-    color: '#E65100',
+    color: Colors.danger,
     fontSize: 11,
     lineHeight: 16,
   },
@@ -122,13 +126,77 @@ export const CreateBookingScreenStyles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'center',
-    ...GlobalStyles.shadow,
+    elevation: 5,
+    shadowColor: Colors.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
   },
   confirmBtnDisabled: {
     opacity: 0.7,
   },
   confirmBtnText: {
     color: Colors.white,
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  // ==========================================
+  // ESTILOS DO MODAL DE AUTENTICAÇÃO
+  // ==========================================
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(38, 50, 56, 0.7)', // Fundo escuro semitransparente usando Colors.dark base
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalCard: {
+    backgroundColor: Colors.white,
+    borderRadius: 20,
+    padding: 25,
+    width: '100%',
+    alignItems: 'center',
+    elevation: 10,
+    shadowColor: Colors.shadow,
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: Colors.dark,
+    marginBottom: 10,
+  },
+  modalText: {
+    fontSize: 15,
+    color: Colors.gray,
+    textAlign: 'center',
+    marginBottom: 25,
+    lineHeight: 22,
+  },
+  modalButtonPrimary: {
+    backgroundColor: Colors.primary,
+    width: '100%',
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  modalButtonPrimaryText: {
+    color: Colors.white,
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  modalButtonSecondary: {
+    width: '100%',
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    backgroundColor: Colors.background,
+  },
+  modalButtonSecondaryText: {
+    color: Colors.gray,
     fontWeight: 'bold',
     fontSize: 16,
   },
